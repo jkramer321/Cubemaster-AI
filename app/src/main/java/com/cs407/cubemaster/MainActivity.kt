@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -39,8 +40,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.ui.theme.Blue
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
+import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.DarkYellow
-import com.cs407.cubemaster.ui.theme.Orange
+import com.cs407.cubemaster.ui.theme.LightOrange
 
 class MainActivity : ComponentActivity() {
 
@@ -63,12 +65,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             CubemasterTheme {
+                val gradientBrush = Brush.verticalGradient(
+                    colors = listOf(
+                        LightOrange,
+                        DarkOrange
+                    )
+                )
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Orange
+                    color = Color.Transparent
                 ) {
-                    AppNavigation()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(gradientBrush)
+                    ) {
+                        AppNavigation()
+                    }
                 }
             }
         }
@@ -97,8 +111,7 @@ class MainActivity : ComponentActivity() {
 fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .background(Orange),
+            .fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Box(
@@ -164,7 +177,7 @@ fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
 
 @Composable
 fun PermissionScreen(modifier: Modifier = Modifier, navController: NavController, requestPermission: () -> Unit) {
-    Box(modifier = modifier.fillMaxSize().background(Orange)) {
+    Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = modifier
                 .fillMaxSize()
