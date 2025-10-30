@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.ui.screens.PermissionScreen
 import com.cs407.cubemaster.ui.screens.ScanScreen
 import com.cs407.cubemaster.ui.screens.StartScreen
+import com.cs407.cubemaster.ui.screens.ValidationScreen
 
 @Composable
 fun AppNavigation(
@@ -31,6 +32,9 @@ fun AppNavigation(
         }
         composable("scan") {
             ScanScreen(navController = navController)
+        }
+        composable("validation") {
+            ValidationScreen(navController = navController)
         }
     }
 }
