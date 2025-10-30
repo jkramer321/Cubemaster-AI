@@ -74,7 +74,11 @@ fun PermissionScreen(
         }
         if (permissionGranted) {
             Button(
-                onClick = { navController.navigate("scan") },
+                onClick = {
+                    navController.navigate("scan") {
+                        popUpTo("permission") { inclusive = true }
+                    }
+                },
                 modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
             ) {
                 Text(text = "Next")

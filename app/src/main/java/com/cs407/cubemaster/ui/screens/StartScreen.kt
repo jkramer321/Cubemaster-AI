@@ -89,7 +89,11 @@ fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
             )
             Spacer(modifier = Modifier.weight(1f))
             Button(
-                onClick = { navController.navigate("permission") },
+                onClick = {
+                    navController.navigate("permission") {
+                        popUpTo("start") { inclusive = true }
+                    }
+                },
                 modifier = Modifier
                     .padding(bottom = 64.dp)
                     .size(width = 200.dp, height = 80.dp)
