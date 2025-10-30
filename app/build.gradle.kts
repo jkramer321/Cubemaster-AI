@@ -1,8 +1,11 @@
+// In app/build.gradle.kts
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+// <-- ADD THIS LINE
 }
+
 
 android {
     namespace = "com.cs407.cubemaster"
@@ -40,7 +43,16 @@ android {
 }
 
 dependencies {
+    // Declare the dependency for Firebase Analytics
+    implementation("com.google.firebase:firebase-analytics")
 
+    // Your existing dependencies
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
+
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

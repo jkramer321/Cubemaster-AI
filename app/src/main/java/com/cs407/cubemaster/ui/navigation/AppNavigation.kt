@@ -5,13 +5,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.ui.screens.PermissionScreen
+import com.cs407.cubemaster.ui.screens.ResultScreen
 import com.cs407.cubemaster.ui.screens.ScanScreen
 import com.cs407.cubemaster.ui.screens.StartScreen
 import com.cs407.cubemaster.ui.screens.ValidationScreen
 
 @Composable
 fun AppNavigation(
-    //hello
     permissionGranted: Boolean,
     showPermissionDeniedMessage: Boolean,
     requestPermission: () -> Unit,
@@ -36,6 +36,9 @@ fun AppNavigation(
         }
         composable("validation") {
             ValidationScreen(navController = navController)
+        }
+        composable("result") {
+            ResultScreen(navController = navController)
         }
     }
 }

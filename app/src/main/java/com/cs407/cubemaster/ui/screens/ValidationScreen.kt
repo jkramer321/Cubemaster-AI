@@ -9,13 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -42,6 +39,7 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
             DarkOrange
         )
     )
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -53,18 +51,22 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .weight(2f) // Make this box take up 2/3 of the space
                     .padding(32.dp)
-                    .border(4.dp, LightOrange, RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
+                    .border(4.dp, LightOrange, RoundedCornerShape(16.dp))
             ) {
-                // This is the top half for the fake model
-                Text(text = "[Placeholder for 3D Cube Model]", color = Color.White)
+                // This is the top half for the camera view
+                Button(
+                    onClick = { navController.navigate("scan") },
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Text(text = "Back")
+                }
             }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .weight(1f) // Make this box take up 1/3 of the space
                     .padding(32.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(DarkOrange),
@@ -81,25 +83,15 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
                         textAlign = TextAlign.Center,
                         fontSize = 20.sp
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
                     Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.padding(top = 16.dp)
                     ) {
-                        Button(
-                            onClick = { navController.popBackStack() },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                        ) {
-                            Text(text = "No")
+                        Button(onClick = { navController.navigate("result") }) {
+                            Text("Yes")
                         }
                         Spacer(modifier = Modifier.width(16.dp))
-                        Button(
-                            onClick = { /* TODO: Navigate to next screen */ },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
-                        ) {
-                            Text(text = "Yes")
+                        Button(onClick = { navController.navigate("scan") }) {
+                            Text("No")
                         }
                     }
                 }
@@ -107,6 +99,7 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
