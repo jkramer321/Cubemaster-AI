@@ -10,6 +10,7 @@ import com.cs407.cubemaster.ui.screens.StartScreen
 
 @Composable
 fun AppNavigation(
+    //hello
     permissionGranted: Boolean,
     showPermissionDeniedMessage: Boolean,
     requestPermission: () -> Unit,
