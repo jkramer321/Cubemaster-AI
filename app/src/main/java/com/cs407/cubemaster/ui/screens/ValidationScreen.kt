@@ -80,12 +80,12 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
                     Row(
                         modifier = Modifier.padding(top = 16.dp)
                     ) {
-                        Button(onClick = { navController.navigate("result") }) {
-                            Text("Yes")
+                        Button(onClick = { navController.popBackStack() }) {
+                            Text("No")
                         }
                         Spacer(modifier = Modifier.width(16.dp))
-                        Button(onClick = { navController.navigate("scan") }) {
-                            Text("No")
+                        Button(onClick = { navController.navigate("result") }) {
+                            Text("Yes")
                         }
                     }
                 }

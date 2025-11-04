@@ -1,5 +1,9 @@
 package com.cs407.cubemaster.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -18,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.School
@@ -68,6 +73,7 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
     )
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    var showAnalysis by remember { mutableStateOf(false) }
 
     if (showDialog) {
         AlertDialog(
@@ -102,43 +108,57 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(2f)
-                .padding(32.dp)
-                .border(4.dp, LightOrange, RoundedCornerShape(16.dp)),
+                .padding(32.dp),
             contentAlignment = Alignment.Center
         ) {
-            BoxWithConstraints {
-                val boxWidth = this.maxWidth
-                var currentStep by remember { mutableStateOf(1) }
-                val steps = (1..10).map { "Step $it: Perform this action." }
+            if (showAnalysis) {
+                AnalysisView()
+            } else {
+                BoxWithConstraints {
+                    val boxWidth = this.maxWidth
+                    var currentStep by remember { mutableStateOf(1) }
+                    val steps = (1..10).map { "Step $it: Perform this action." }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
-                ) {
-                    if (currentStep < steps.size) {
-                        StepCard(
-                            step = currentStep + 1,
-                            isExpanded = false,
-                            content = steps[currentStep],
-                            onClick = { currentStep++ }
-                        )
-                    }
+                    AnimatedContent(
+                        targetState = currentStep,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                slideInVertically(animationSpec = tween(durationMillis = 600)) { height -> -height } togetherWith slideOutVertically(animationSpec = tween(durationMillis = 600)) { height -> height }
+                            } else {
+                                slideInVertically(animationSpec = tween(durationMillis = 600)) { height -> height } togetherWith slideOutVertically(animationSpec = tween(durationMillis = 600)) { height -> -height }
+                            }
+                        }
+                    ) { targetStep ->
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
+                        ) {
+                            if (targetStep < steps.size) {
+                                StepCard(
+                                    step = targetStep + 1,
+                                    isExpanded = false,
+                                    content = steps[targetStep],
+                                    onClick = { currentStep++ }
+                                )
+                            }
 
-                    StepCard(
-                        step = currentStep,
-                        isExpanded = true,
-                        content = steps[currentStep - 1],
-                        onClick = { /* Already expanded */ },
-                        width = boxWidth
-                    )
+                            StepCard(
+                                step = targetStep,
+                                isExpanded = true,
+                                content = steps[targetStep - 1],
+                                onClick = { /* Already expanded */ },
+                                width = boxWidth
+                            )
 
-                    if (currentStep > 1) {
-                        StepCard(
-                            step = currentStep - 1,
-                            isExpanded = false,
-                            content = steps[currentStep - 2],
-                            onClick = { currentStep-- }
-                        )
+                            if (targetStep > 1) {
+                                StepCard(
+                                    step = targetStep - 1,
+                                    isExpanded = false,
+                                    content = steps[targetStep - 2],
+                                    onClick = { currentStep-- }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -161,9 +181,14 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                 onClick = { showDialog = true }
             )
             BottomNavItem(
+                icon = Icons.AutoMirrored.Filled.List,
+                label = "Steps",
+                onClick = { showAnalysis = false }
+            )
+            BottomNavItem(
                 icon = Icons.Default.Analytics,
                 label = "Analysis",
-                onClick = { /* TODO */ }
+                onClick = { showAnalysis = true }
             )
             BottomNavItem(
                 icon = Icons.Default.School,
@@ -209,6 +234,21 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                 onClick = { /* TODO */ }
             )
         }
+    }
+}
+
+@Composable
+fun AnalysisView() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Total Steps: 10",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp
+        )
     }
 }
 
