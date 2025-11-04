@@ -56,12 +56,6 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
                     .border(4.dp, LightOrange, RoundedCornerShape(16.dp))
             ) {
                 // This is the top half for the camera view
-                Button(
-                    onClick = { navController.navigate("scan") },
-                    modifier = Modifier.align(Alignment.TopEnd)
-                ) {
-                    Text(text = "Back")
-                }
             }
             Box(
                 modifier = Modifier
