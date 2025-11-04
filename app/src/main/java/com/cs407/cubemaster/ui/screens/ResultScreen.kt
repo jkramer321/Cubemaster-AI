@@ -50,6 +50,13 @@ import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
@@ -60,6 +67,7 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
         )
     )
     var showDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     if (showDialog) {
         AlertDialog(
@@ -160,7 +168,40 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
             BottomNavItem(
                 icon = Icons.Default.School,
                 label = "Guide",
-                onClick = { /* TODO */ }
+                onClick = {
+                    val assetManager = context.assets
+                    val pdfName = "official_guide.pdf"
+                    val file = File(context.cacheDir, pdfName)
+                    if (!file.exists()) {
+                        try {
+                            assetManager.open(pdfName).use { inputStream ->
+                                FileOutputStream(file).use { outputStream ->
+                                    inputStream.copyTo(outputStream)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            Toast.makeText(context, "Error copying file", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    val uri = FileProvider.getUriForFile(
+                        context,
+                        context.applicationContext.packageName + ".provider",
+                        file
+                    )
+
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, "application/pdf")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        Toast.makeText(context, "No PDF viewer found", Toast.LENGTH_LONG).show()
+                    }
+                }
             )
             BottomNavItem(
                 icon = Icons.Default.Settings,
