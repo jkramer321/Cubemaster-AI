@@ -1,5 +1,10 @@
 package com.cs407.cubemaster.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,10 +24,22 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "start") {
-        composable("start") {
+        composable(
+            "start",
+            enterTransition = { fadeIn(animationSpec = tween(700)) },
+            exitTransition = { fadeOut(animationSpec = tween(700)) },
+            popEnterTransition = { fadeIn(animationSpec = tween(700)) },
+            popExitTransition = { fadeOut(animationSpec = tween(700)) }
+        ) {
             StartScreen(navController = navController)
         }
-        composable("permission") {
+        composable(
+            "permission",
+            enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(700)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
+        ) {
             PermissionScreen(
                 navController = navController,
                 permissionGranted = permissionGranted,
@@ -31,13 +48,31 @@ fun AppNavigation(
                 openSettings = openSettings
             )
         }
-        composable("scan") {
+        composable(
+            "scan",
+            enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(700)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
+        ) {
             ScanScreen(navController = navController)
         }
-        composable("validation") {
+        composable(
+            "validation",
+            enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(700)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
+        ) {
             ValidationScreen(navController = navController)
         }
-        composable("result") {
+        composable(
+            "result",
+            enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(700)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
+        ) {
             ResultScreen(navController = navController)
         }
     }

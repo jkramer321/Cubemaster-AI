@@ -1,5 +1,9 @@
 package com.cs407.cubemaster.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -115,34 +119,45 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                     var currentStep by remember { mutableStateOf(1) }
                     val steps = (1..10).map { "Step $it: Perform this action." }
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
-                    ) {
-                        if (currentStep < steps.size) {
-                            StepCard(
-                                step = currentStep + 1,
-                                isExpanded = false,
-                                content = steps[currentStep],
-                                onClick = { currentStep++ }
-                            )
+                    AnimatedContent(
+                        targetState = currentStep,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                slideInVertically(animationSpec = tween(durationMillis = 600)) { height -> -height } togetherWith slideOutVertically(animationSpec = tween(durationMillis = 600)) { height -> height }
+                            } else {
+                                slideInVertically(animationSpec = tween(durationMillis = 600)) { height -> height } togetherWith slideOutVertically(animationSpec = tween(durationMillis = 600)) { height -> -height }
+                            }
                         }
+                    ) { targetStep ->
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
+                        ) {
+                            if (targetStep < steps.size) {
+                                StepCard(
+                                    step = targetStep + 1,
+                                    isExpanded = false,
+                                    content = steps[targetStep],
+                                    onClick = { currentStep++ }
+                                )
+                            }
 
-                        StepCard(
-                            step = currentStep,
-                            isExpanded = true,
-                            content = steps[currentStep - 1],
-                            onClick = { /* Already expanded */ },
-                            width = boxWidth
-                        )
-
-                        if (currentStep > 1) {
                             StepCard(
-                                step = currentStep - 1,
-                                isExpanded = false,
-                                content = steps[currentStep - 2],
-                                onClick = { currentStep-- }
+                                step = targetStep,
+                                isExpanded = true,
+                                content = steps[targetStep - 1],
+                                onClick = { /* Already expanded */ },
+                                width = boxWidth
                             )
+
+                            if (targetStep > 1) {
+                                StepCard(
+                                    step = targetStep - 1,
+                                    isExpanded = false,
+                                    content = steps[targetStep - 2],
+                                    onClick = { currentStep-- }
+                                )
+                            }
                         }
                     }
                 }
