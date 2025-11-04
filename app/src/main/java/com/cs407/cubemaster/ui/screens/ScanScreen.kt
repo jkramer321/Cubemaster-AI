@@ -50,7 +50,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .weight(2f)
                     .padding(32.dp)
                     .border(4.dp, LightOrange, RoundedCornerShape(16.dp))
             ) {
