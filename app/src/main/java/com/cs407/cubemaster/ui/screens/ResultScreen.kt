@@ -20,9 +20,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.TrackChanges
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -58,6 +59,30 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
             DarkOrange
         )
     )
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Are you sure?") },
+            text = { Text("Returning home will cause you to lose your progress.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        navController.navigate("start")
+                        showDialog = false
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -125,11 +150,11 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
             BottomNavItem(
                 icon = Icons.Default.Home,
                 label = "Home",
-                onClick = { navController.navigate("start") }
+                onClick = { showDialog = true }
             )
             BottomNavItem(
                 icon = Icons.Default.Analytics,
-                label = "Stats",
+                label = "Analysis",
                 onClick = { /* TODO */ }
             )
             BottomNavItem(
@@ -138,13 +163,8 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                 onClick = { /* TODO */ }
             )
             BottomNavItem(
-                icon = Icons.Default.TrackChanges,
-                label = "Moves",
-                onClick = { /* TODO */ }
-            )
-            BottomNavItem(
-                icon = Icons.Default.IosShare,
-                label = "Export",
+                icon = Icons.Default.Settings,
+                label = "Settings",
                 onClick = { /* TODO */ }
             )
         }
