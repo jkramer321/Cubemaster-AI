@@ -19,7 +19,8 @@ import java.util.concurrent.Executor
 
 @Composable
 fun CameraPreview(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    lensFacing: Int = CameraSelector.LENS_FACING_BACK
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -30,7 +31,7 @@ fun CameraPreview(
         }
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(lensFacing) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
         val executor: Executor = ContextCompat.getMainExecutor(context)
 
@@ -42,7 +43,9 @@ fun CameraPreview(
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                val cameraSelector = CameraSelector.Builder()
+                    .requireLensFacing(lensFacing)
+                    .build()
 
                 try {
                     cameraProvider.unbindAll()

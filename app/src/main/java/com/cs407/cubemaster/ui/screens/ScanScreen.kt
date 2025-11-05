@@ -1,6 +1,7 @@
 package com.cs407.cubemaster.ui.screens
 
 import android.Manifest
+import androidx.camera.core.CameraSelector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,9 +13,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +53,7 @@ import com.google.accompanist.permissions.shouldShowRationale
 @Composable
 fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+    var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
 
     LaunchedEffect(Unit) {
         if (!cameraPermissionState.status.isGranted) {
@@ -78,7 +85,10 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
             ) {
                 // Camera view within the white box
                 if (cameraPermissionState.status.isGranted) {
-                    CameraPreview(modifier = Modifier.fillMaxSize())
+                    CameraPreview(
+                        modifier = Modifier.fillMaxSize(),
+                        lensFacing = lensFacing
+                    )
 
                     // Semi-transparent white square overlay for scan guidance
                     Box(
@@ -118,6 +128,28 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                     }
                 }
 
+                // Flip camera button (bottom right)
+                IconButton(
+                    onClick = {
+                        lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                            CameraSelector.LENS_FACING_FRONT
+                        } else {
+                            CameraSelector.LENS_FACING_BACK
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Cameraswitch,
+                        contentDescription = "Flip Camera",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                // Next button (top right)
                 Button(
                     onClick = { navController.navigate("validation") },
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
