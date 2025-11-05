@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -78,6 +79,27 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                 // Camera view within the white box
                 if (cameraPermissionState.status.isGranted) {
                     CameraPreview(modifier = Modifier.fillMaxSize())
+
+                    // Semi-transparent white square overlay for scan guidance
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+                                .aspectRatio(1f)
+                                .border(
+                                    width = 3.dp,
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .background(
+                                    color = Color.White.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                        )
+                    }
                 } else {
                     Box(
                         modifier = Modifier.fillMaxSize(),
