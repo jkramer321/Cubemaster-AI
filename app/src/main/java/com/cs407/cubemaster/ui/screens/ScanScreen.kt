@@ -1,5 +1,6 @@
 package com.cs407.cubemaster.ui.screens
 
+import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,12 +33,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.cs407.cubemaster.ui.components.CameraPreview
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+
+    LaunchedEffect(Unit) {
+        if (!cameraPermissionState.status.isGranted) {
+            cameraPermissionState.launchPermissionRequest()
+        }
+    }
+
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
             LightOrange,
@@ -53,11 +73,32 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                     .weight(2f)
                     .padding(32.dp)
                     .border(4.dp, LightOrange, RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(16.dp))
             ) {
-                // This is the top half for the camera view
+                // Camera view within the white box
+                if (cameraPermissionState.status.isGranted) {
+                    CameraPreview(modifier = Modifier.fillMaxSize())
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (cameraPermissionState.status.shouldShowRationale) {
+                                "Camera permission is required to scan the cube"
+                            } else {
+                                "Requesting camera permission..."
+                            },
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+
                 Button(
                     onClick = { navController.navigate("validation") },
-                    modifier = Modifier.align(Alignment.TopEnd)
+                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
                     Text(text = "Next")
                 }
