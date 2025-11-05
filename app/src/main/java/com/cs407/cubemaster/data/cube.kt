@@ -6,7 +6,7 @@ data class Cube(val s1: MutableList<MutableList<Int>>,
                 val s4: MutableList<MutableList<Int>>,
                 val s5: MutableList<MutableList<Int>>,
                 val s6: MutableList<MutableList<Int>>,) {
-    var sides = mutableMapOf<String, MutableList<MutableList<Int>>>(
+    private var sides = mutableMapOf<String, MutableList<MutableList<Int>>>(
         "s1" to s1,
         "s2" to s2,
         "s3" to s3,
@@ -57,7 +57,7 @@ data class Cube(val s1: MutableList<MutableList<Int>>,
         return sides[side]?.get(row)?.get(col) ?: throw IllegalArgumentException("Invalid side, row, or col")
     }
 
-    fun setCell(side: String, row: Int, col: Int, value: Int) {
+    private fun setCell(side: String, row: Int, col: Int, value: Int) {
         sides[side]?.get(row)?.set(col, value) ?: throw IllegalArgumentException("Invalid side, row, or col")
     }
 
@@ -68,7 +68,7 @@ data class Cube(val s1: MutableList<MutableList<Int>>,
         return sides[side]?.get(row) ?: throw IllegalArgumentException("Invalid side or row")
     }
 
-    fun setRow(side: String, row: Int, newRow: List<Int>) {
+    private fun setRow(side: String, row: Int, newRow: List<Int>) {
         if (row < 0 || row > 2) {
             throw IllegalArgumentException("Invalid row index")
         }
@@ -93,7 +93,7 @@ data class Cube(val s1: MutableList<MutableList<Int>>,
         return values
     }
 
-    fun setCol(side: String, colIndex: Int, newCol: List<Int>) {
+    private fun setCol(side: String, colIndex: Int, newCol: List<Int>) {
         if (newCol.size != 3) throw IllegalArgumentException("Column must have size 3")
         if (colIndex < 0 || colIndex > 2) throw IllegalArgumentException("Invalid column index")
         for (i in 0..2) {

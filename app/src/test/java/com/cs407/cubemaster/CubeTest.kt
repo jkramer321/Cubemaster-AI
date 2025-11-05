@@ -93,29 +93,8 @@ class CubeTest {
         assertFalse("Unique cube should not be solved", cube.isSolved())
     }
 
-    @Test
-    fun testGetSetCell() {
-        val cube = createSolvedCube()
-        assertEquals(1, cube.getCell("s1", 0, 0))
-        cube.setCell("s1", 0, 0, 9)
-        assertEquals(9, cube.getCell("s1", 0, 0))
-    }
-
-    @Test
-    fun testGetSetRow() {
-        val cube = createSolvedCube()
-        assertEquals(listOf(1, 1, 1), cube.getRow("s1", 0))
-        cube.setRow("s1", 0, listOf(7, 8, 9))
-        assertEquals(listOf(7, 8, 9), cube.getRow("s1", 0))
-    }
-
-    @Test
-    fun testGetSetCol() {
-        val cube = createSolvedCube()
-        assertEquals(listOf(1, 1, 1), cube.getCol("s1", 0))
-        cube.setCol("s1", 0, listOf(7, 8, 9))
-        assertEquals(listOf(7, 8, 9), cube.getCol("s1", 0))
-    }
+    // Setter tests removed - setCell, setRow, setCol are now private
+    // The cube can only be modified through rotateCol() and rotateRow()
 
     // ========== COLUMN ROTATION TESTS ==========
 
