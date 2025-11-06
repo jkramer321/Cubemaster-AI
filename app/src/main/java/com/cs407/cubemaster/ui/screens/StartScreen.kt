@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,7 +50,7 @@ fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.rubik_icon),
-                contentDescription = "Rubik's Cube Icon",
+                contentDescription = stringResource(R.string.cd_rubik_icon),
                 modifier = Modifier.size(150.dp)
             )
         }
@@ -61,7 +62,7 @@ fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
             Spacer(modifier = Modifier.height(100.dp))
             Box {
                 Text(
-                    text = "CUBEMASTER",
+                    text = stringResource(R.string.app_title),
                     style = TextStyle(
                         fontSize = 48.sp,
                         color = Blue,
@@ -70,7 +71,7 @@ fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
                     modifier = Modifier.padding(start = 4.dp, top = 4.dp)
                 )
                 Text(
-                    text = "CUBEMASTER",
+                    text = stringResource(R.string.app_title),
                     style = TextStyle(
                         fontSize = 48.sp,
                         color = Color.White,
@@ -80,7 +81,7 @@ fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
             }
             Spacer(modifier = Modifier.height(32.dp))
             Text(
-                text = "Happy Solving!",
+                text = stringResource(R.string.welcome_message),
                 style = TextStyle(
                     fontSize = 32.sp,
                     color = Color.White,
@@ -94,7 +95,7 @@ fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
                     .padding(bottom = 64.dp)
                     .size(width = 200.dp, height = 80.dp)
             ) {
-                Text(text = "Start", fontSize = 24.sp)
+                Text(text = stringResource(R.string.button_start), fontSize = 24.sp)
             }
         }
     }

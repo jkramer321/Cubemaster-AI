@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.cs407.cubemaster.R
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
@@ -78,8 +80,8 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Are you sure?") },
-            text = { Text("Returning home will cause you to lose your progress.") },
+            title = { Text(stringResource(R.string.dialog_are_you_sure)) },
+            text = { Text(stringResource(R.string.dialog_lose_progress)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -87,12 +89,12 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                         showDialog = false
                     }
                 ) {
-                    Text("Yes")
+                    Text(stringResource(R.string.button_yes))
                 }
             },
             dismissButton = {
                 Button(onClick = { showDialog = false }) {
-                    Text("No")
+                    Text(stringResource(R.string.button_no))
                 }
             }
         )
@@ -117,7 +119,7 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                 BoxWithConstraints {
                     val boxWidth = this.maxWidth
                     var currentStep by remember { mutableStateOf(1) }
-                    val steps = (1..10).map { "Step $it: Perform this action." }
+                    val steps = (1..10).map { stringResource(R.string.step_template, it) }
 
                     AnimatedContent(
                         targetState = currentStep,
@@ -177,22 +179,22 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
         ) {
             BottomNavItem(
                 icon = Icons.Default.Home,
-                label = "Home",
+                label = stringResource(R.string.nav_home),
                 onClick = { showDialog = true }
             )
             BottomNavItem(
                 icon = Icons.AutoMirrored.Filled.List,
-                label = "Steps",
+                label = stringResource(R.string.nav_steps),
                 onClick = { showAnalysis = false }
             )
             BottomNavItem(
                 icon = Icons.Default.Analytics,
-                label = "Analysis",
+                label = stringResource(R.string.nav_analysis),
                 onClick = { showAnalysis = true }
             )
             BottomNavItem(
                 icon = Icons.Default.School,
-                label = "Guide",
+                label = stringResource(R.string.nav_guide),
                 onClick = {
                     val assetManager = context.assets
                     val pdfName = "official_guide.pdf"
@@ -206,7 +208,7 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            Toast.makeText(context, "Error copying file", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.error_copying_file), Toast.LENGTH_SHORT).show()
                         }
                     }
 
@@ -224,13 +226,13 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                     try {
                         context.startActivity(intent)
                     } catch (e: ActivityNotFoundException) {
-                        Toast.makeText(context, "No PDF viewer found", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, context.getString(R.string.error_no_pdf_viewer), Toast.LENGTH_LONG).show()
                     }
                 }
             )
             BottomNavItem(
                 icon = Icons.Default.Settings,
-                label = "Settings",
+                label = stringResource(R.string.nav_settings),
                 onClick = { /* TODO */ }
             )
         }
@@ -244,7 +246,7 @@ fun AnalysisView() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Total Steps: 10",
+            text = stringResource(R.string.analysis_total_steps, 10),
             color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp
@@ -285,7 +287,7 @@ fun StepCard(step: Int, isExpanded: Boolean, content: String, onClick: () -> Uni
                 )
             } else {
                 Text(
-                    text = "Step $step",
+                    text = stringResource(R.string.step_label, step),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp

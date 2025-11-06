@@ -1,3 +1,51 @@
 <resources>
+    <!-- App Name -->
     <string name="app_name">Cubemaster</string>
+
+    <!-- Permission Screen -->
+    <string name="permission_title">Camera Permission Required</string>
+    <string name="permission_granted">Permission Granted!</string>
+    <string name="permission_denied_message">Camera permission is required to scan the cube. Please enable it in the app settings.</string>
+    <string name="permission_request_message">This app needs camera access to scan your Rubik\'s Cube. Please grant the permission to continue.</string>
+    <string name="button_open_settings">Open Settings</string>
+    <string name="button_grant_permission">Grant Permission</string>
+
+    <!-- Start Screen -->
+    <string name="app_title">CUBEMASTER</string>
+    <string name="welcome_message">Happy Solving!</string>
+    <string name="button_start">Start</string>
+    <string name="cd_rubik_icon">Rubik\'s Cube Icon</string>
+
+    <!-- Scan Screen -->
+    <string name="camera_permission_required">Camera permission is required to scan the cube</string>
+    <string name="requesting_permission">Requesting camera permission...</string>
+    <string name="scan_instruction">Please keep a single side\nfacing the camera</string>
+    <string name="cd_flip_camera">Flip Camera</string>
+
+    <!-- Navigation Buttons -->
+    <string name="button_back">Back</string>
+    <string name="button_next">Next</string>
+    <string name="button_yes">Yes</string>
+    <string name="button_no">No</string>
+
+    <!-- Validation Screen -->
+    <string name="validation_prompt">Does this look correct?</string>
+
+    <!-- Result Screen -->
+    <string name="dialog_are_you_sure">Are you sure?</string>
+    <string name="dialog_lose_progress">Returning home will cause you to lose your progress.</string>
+    <string name="step_template">Step %1$d: Perform this action.</string>
+    <string name="step_label">Step %1$d</string>
+    <string name="analysis_total_steps">Total Steps: %1$d</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_steps">Steps</string>
+    <string name="nav_analysis">Analysis</string>
+    <string name="nav_guide">Guide</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Error Messages -->
+    <string name="error_copying_file">Error copying file</string>
+    <string name="error_no_pdf_viewer">No PDF viewer found</string>
 </resources>

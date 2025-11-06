@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.cs407.cubemaster.R
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
@@ -71,7 +73,7 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Does this look correct?",
+                        text = stringResource(R.string.validation_prompt),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -81,11 +83,11 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
                         modifier = Modifier.padding(top = 16.dp)
                     ) {
                         Button(onClick = { navController.popBackStack() }) {
-                            Text("No")
+                            Text(stringResource(R.string.button_no))
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Button(onClick = { navController.navigate("result") }) {
-                            Text("Yes")
+                            Text(stringResource(R.string.button_yes))
                         }
                     }
                 }

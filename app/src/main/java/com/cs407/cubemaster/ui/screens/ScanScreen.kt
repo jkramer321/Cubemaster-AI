@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.cs407.cubemaster.R
 import com.cs407.cubemaster.ui.components.CameraPreview
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
@@ -117,9 +119,9 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                     ) {
                         Text(
                             text = if (cameraPermissionState.status.shouldShowRationale) {
-                                "Camera permission is required to scan the cube"
+                                stringResource(R.string.camera_permission_required)
                             } else {
-                                "Requesting camera permission..."
+                                stringResource(R.string.requesting_permission)
                             },
                             color = Color.White,
                             textAlign = TextAlign.Center,
@@ -143,7 +145,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Cameraswitch,
-                        contentDescription = "Flip Camera",
+                        contentDescription = stringResource(R.string.cd_flip_camera),
                         tint = Color.White,
                         modifier = Modifier.size(32.dp)
                     )
@@ -154,7 +156,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                     onClick = { navController.navigate("validation") },
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
-                    Text(text = "Next")
+                    Text(text = stringResource(R.string.button_next))
                 }
             }
             Box(
@@ -173,7 +175,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                     CircularProgressIndicator()
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Please keep a single side\nfacing the camera",
+                        text = stringResource(R.string.scan_instruction),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,

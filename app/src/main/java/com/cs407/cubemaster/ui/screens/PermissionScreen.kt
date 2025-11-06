@@ -14,9 +14,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.cs407.cubemaster.R
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
@@ -39,7 +41,7 @@ fun PermissionScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Camera Permission Required",
+                text = stringResource(R.string.permission_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 textAlign = TextAlign.Center
@@ -47,9 +49,9 @@ fun PermissionScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = when {
-                    permissionGranted -> "Permission Granted!"
-                    showPermissionDeniedMessage -> "Camera permission is required to scan the cube. Please enable it in the app settings."
-                    else -> "This app needs camera access to scan your Rubik's Cube. Please grant the permission to continue."
+                    permissionGranted -> stringResource(R.string.permission_granted)
+                    showPermissionDeniedMessage -> stringResource(R.string.permission_denied_message)
+                    else -> stringResource(R.string.permission_request_message)
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White,
@@ -58,11 +60,11 @@ fun PermissionScreen(
             Spacer(modifier = Modifier.height(32.dp))
             if (showPermissionDeniedMessage) {
                 Button(onClick = openSettings) {
-                    Text(text = "Open Settings")
+                    Text(text = stringResource(R.string.button_open_settings))
                 }
             } else {
                 Button(onClick = requestPermission, enabled = !permissionGranted) {
-                    Text(text = "Grant Permission")
+                    Text(text = stringResource(R.string.button_grant_permission))
                 }
             }
         }
@@ -70,7 +72,7 @@ fun PermissionScreen(
             onClick = { navController.popBackStack() },
             modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
         ) {
-            Text(text = "Back")
+            Text(text = stringResource(R.string.button_back))
         }
         if (permissionGranted) {
             Button(
@@ -81,7 +83,7 @@ fun PermissionScreen(
                 },
                 modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
             ) {
-                Text(text = "Next")
+                Text(text = stringResource(R.string.button_next))
             }
         }
     }
