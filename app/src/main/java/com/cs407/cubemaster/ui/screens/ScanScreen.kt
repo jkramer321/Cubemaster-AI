@@ -43,6 +43,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.R
 import com.cs407.cubemaster.ui.components.CameraPreview
+import com.cs407.cubemaster.ui.components.CubeOverlay
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
@@ -92,24 +93,15 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                         lensFacing = lensFacing
                     )
 
-                    // Semi-transparent white square overlay for scan guidance
+                    // Semi-transparent cube overlay for scan guidance
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.7f)
-                                .aspectRatio(1f)
-                                .border(
-                                    width = 3.dp,
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .background(
-                                    color = Color.White.copy(alpha = 0.1f),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
+                        CubeOverlay(
+                            color = Color.White,
+                            alpha = 0.8f,
+                            strokeWidth = 3f
                         )
                     }
                 } else {
