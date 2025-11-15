@@ -1,11 +1,11 @@
 package com.cs407.cubemaster
 
 import com.cs407.cubemaster.data.Cube
-import kotlin.test.Test
-import kotlin.test.assertTrue
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
+import junit.framework.TestCase.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Test
 
 class CubeTest {
 
@@ -566,5 +566,104 @@ class CubeTest {
             }
         }
     }
-}
 
+    @Test
+    fun testDebug_singleColumnRotation() {
+        val cube = createUniqueCube()
+
+        println("=== BEFORE ROTATION ===")
+        println("s1 col 0: ${cube.getCol("s1", 0)}")
+        println("s2 col 0: ${cube.getCol("s2", 0)}")
+        println("s6 col 2: ${cube.getCol("s6", 2)}")
+        println("s6 col 0: ${cube.getCol("s6", 0)}")
+        println("s3 col 0: ${cube.getCol("s3", 0)}")
+
+        cube.rotateCol(0, true)
+
+        println("\n=== AFTER ROTATING COL 0 UP ===")
+        println("s1 col 0: ${cube.getCol("s1", 0)} (should be [31, 34, 37] from s3)")
+        println("s2 col 0: ${cube.getCol("s2", 0)} (should be [11, 14, 17] from s1)")
+        println("s6 col 2: ${cube.getCol("s6", 2)} (should be reversed from s2)")
+        println("s6 col 0: ${cube.getCol("s6", 0)}")
+        println("s3 col 0: ${cube.getCol("s3", 0)} (should be from s6 col 2 reversed)")
+    }
+
+    @Test
+    fun testDebug_singleRowRotation() {
+        val cube = createUniqueCube()
+
+        println("=== BEFORE ROTATION ===")
+        println("s1 row 0: ${cube.getRow("s1", 0)}")
+        println("s5 row 0: ${cube.getRow("s5", 0)}")
+        println("s6 row 0: ${cube.getRow("s6", 0)}")
+        println("s4 row 0: ${cube.getRow("s4", 0)}")
+
+        cube.rotateRow(0, true)
+
+        println("\n=== AFTER ROTATING ROW 0 RIGHT ===")
+        println("s1 row 0: ${cube.getRow("s1", 0)} (should be [41, 42, 43] from s4)")
+        println("s5 row 0: ${cube.getRow("s5", 0)} (should be [11, 12, 13] from s1)")
+        println("s6 row 0: ${cube.getRow("s6", 0)} (should be [51, 52, 53] from s5, but reversed)")
+        println("s4 row 0: ${cube.getRow("s4", 0)} (should be from s6 reversed)")
+    }
+
+    @Test
+    fun testDebug_fourColumnRotations() {
+        val cube = createUniqueCube()
+
+        println("=== INITIAL STATE ===")
+        println("s1 col 0: ${cube.getCol("s1", 0)}")
+
+        for (i in 1..4) {
+            cube.rotateCol(0, true)
+            println("\n=== AFTER ROTATION $i ===")
+            println("s1 col 0: ${cube.getCol("s1", 0)}")
+            println("s2 col 0: ${cube.getCol("s2", 0)}")
+            println("s6 col 2: ${cube.getCol("s6", 2)}")
+            println("s3 col 0: ${cube.getCol("s3", 0)}")
+        }
+
+        println("\n=== FINAL (should match initial) ===")
+        println("s1 col 0: ${cube.getCol("s1", 0)} (should be [11, 14, 17])")
+    }
+
+    @Test
+    fun testDebug_fourRowRotations() {
+        val cube = createUniqueCube()
+
+        println("=== INITIAL STATE ===")
+        println("s1 row 0: ${cube.getRow("s1", 0)}")
+
+        for (i in 1..4) {
+            cube.rotateRow(0, true)
+            println("\n=== AFTER ROTATION $i ===")
+            println("s1 row 0: ${cube.getRow("s1", 0)}")
+            println("s5 row 0: ${cube.getRow("s5", 0)}")
+            println("s6 row 0: ${cube.getRow("s6", 0)}")
+            println("s4 row 0: ${cube.getRow("s4", 0)}")
+        }
+
+        println("\n=== FINAL (should match initial) ===")
+        println("s1 row 0: ${cube.getRow("s1", 0)} (should be [11, 12, 13])")
+    }
+
+    @Test
+    fun testDebug_trackSingleValue() {
+        val cube = createUniqueCube()
+
+        println("=== TRACKING VALUE 11 (s1[0][0]) through column rotation ===")
+        println("Initial: s1[0][0] = ${cube.getCell("s1", 0, 0)}")
+
+        cube.rotateCol(0, true)
+        println("After 1 rotation up: s2[0][0] = ${cube.getCell("s2", 0, 0)} (should be 11)")
+
+        cube.rotateCol(0, true)
+        println("After 2 rotations up: s6[0][2] = ${cube.getCell("s6", 0, 2)} (should be 11)")
+
+        cube.rotateCol(0, true)
+        println("After 3 rotations up: s3[0][0] = ${cube.getCell("s3", 0, 0)} (should be 11)")
+
+        cube.rotateCol(0, true)
+        println("After 4 rotations up: s1[0][0] = ${cube.getCell("s1", 0, 0)} (should be 11)")
+    }
+}

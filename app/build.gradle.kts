@@ -47,6 +47,20 @@ kotlin {
                 implementation(libs.androidx.compose.ui.tooling.preview)
                 implementation(libs.androidx.compose.material3)
                 implementation(libs.androidx.navigation.compose)
+                implementation(libs.androidx.compose.material.icons.extended)
+                
+                // CameraX dependencies
+                val camerax_version = "1.3.0"
+                implementation("androidx.camera:camera-core:$camerax_version")
+                implementation("androidx.camera:camera-camera2:$camerax_version")
+                implementation("androidx.camera:camera-lifecycle:$camerax_version")
+                implementation("androidx.camera:camera-view:$camerax_version")
+                
+                // Accompanist permissions
+                implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+                
+                // Fragment
+                implementation("androidx.fragment:fragment-ktx:1.6.0")
             }
         }
         val androidUnitTest by getting {
@@ -75,7 +89,8 @@ android {
         getByName("main") {
             manifest.srcFile("src/androidMain/AndroidManifest.xml")
             java.setSrcDirs(listOf("src/androidMain/kotlin"))
-            res.setSrcDirs(listOf("src/androidMain/res/res"))
+            res.setSrcDirs(listOf("src/androidMain/res"))
+            assets.setSrcDirs(listOf("src/androidMain/assets"))
         }
         getByName("test") {
             java.setSrcDirs(listOf("src/androidUnitTest/kotlin"))
@@ -111,43 +126,15 @@ android {
 }
 
 dependencies {
-    // Declare the dependency for Firebase Analytics
+    // Firebase dependencies (not in source sets, so keep here)
+    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
     implementation("com.google.firebase:firebase-analytics")
 
-    // Your existing dependencies
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-
-    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
-
-    implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.navigation.compose)
-    implementation("androidx.fragment:fragment-ktx:1.6.0")
-
-    // CameraX dependencies
-    val camerax_version = "1.3.0"
-    implementation("androidx.camera:camera-core:$camerax_version")
-    implementation("androidx.camera:camera-camera2:$camerax_version")
-    implementation("androidx.camera:camera-lifecycle:$camerax_version")
-    implementation("androidx.camera:camera-view:$camerax_version")
-
-    // Accompanist permissions
-    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
-
-    testImplementation(libs.junit)
+    // Android test dependencies (not in source sets)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    testImplementation(kotlin("test"))
 }

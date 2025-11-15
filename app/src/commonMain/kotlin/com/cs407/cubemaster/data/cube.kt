@@ -208,4 +208,3 @@ data class Cube(val s1: MutableList<MutableList<Int>>,
         )
     }
 }
-
