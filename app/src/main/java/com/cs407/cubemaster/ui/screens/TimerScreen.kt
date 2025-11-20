@@ -207,7 +207,7 @@ fun TimerScreen(navController: NavController) {
             text = { Text("Any unsaved times will be lost.") },
             confirmButton = {
                 Button(onClick = {
-                    navController.navigate("result")
+                    navController.popBackStack()
                     showBackDialog = false
                 }) {
                     Text("Yes")

@@ -93,7 +93,7 @@ fun AppNavigation(
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
         ) {
-            ProfileScreen()
+            ProfileScreen(navController = navController)
         }
     }
 }
