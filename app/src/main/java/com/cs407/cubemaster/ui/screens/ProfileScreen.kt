@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -82,111 +83,134 @@ fun ProfileScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f) // Make this box fill all available space in this Column
-                    .padding(top = 32.dp, start = 24.dp, end = 24.dp, bottom = 16.dp)
+                    .padding(top = 32.dp, start = 32.dp, end = 32.dp, bottom = 24.dp) // Increased padding
                     .background(
                         color = MediumOrange, // Changed to MediumOrange
                         shape = MaterialTheme.shapes.medium
                     ),
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.Top
+                Column(
+                    modifier = Modifier.fillMaxSize() // This column will manage the space inside the orange box
                 ) {
-                    // Profile Picture Placeholder
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .clickable { imagePickerLauncher.launch("image/*") } // Make it clickable
-                            .background(Color.Gray)
+                    Row(
+                        modifier = Modifier.padding(16.dp), // Existing Row
+                        verticalAlignment = Alignment.Top
                     ) {
-                        if (selectedImageUri != null) {
-                            AsyncImage(
-                                model = selectedImageUri,
-                                contentDescription = "Selected Profile Picture",
-                                modifier = Modifier.fillMaxSize().clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            // Use a default image if no image is selected
-                            Image(
-                                painter = painterResource(id = R.drawable.rubik_icon),
-                                contentDescription = "Default Profile Picture",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    // Name and Quote
-                    Column {
-                        val userNameState = remember { mutableStateOf(prefs.getString("user_name", "Your Name") ?: "Your Name") }
-                        OutlinedTextField(
-                            value = userNameState.value,
-                            onValueChange = { newValue ->
-                                userNameState.value = newValue
-                                prefs.edit().putString("user_name", newValue).apply()
-                            },
-                            label = { Text("Your Name") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Dropdown for Favorite Quote
-                        val allQuotes = listOf(
-                            "The only way to do great work is to love what you do.",
-                            "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-                            "The best way to predict the future is to create it.",
-                            "Hard work beats talent when talent doesn't work hard."
-                        )
-                        // For now, assume all are unlocked.
-                        val unlockedQuotes = allQuotes
-
-                        var expanded by remember { mutableStateOf(false) }
-                        val selectedQuoteState = remember { mutableStateOf(prefs.getString("selected_quote", allQuotes.firstOrNull() ?: "") ?: "") }
-
-                        ExposedDropdownMenuBox(
-                            expanded = expanded,
-                            onExpandedChange = { expanded = !expanded },
-                            modifier = Modifier.fillMaxWidth()
+                        // Profile Picture Placeholder
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp) // Made smaller
+                                .clip(CircleShape)
+                                .clickable { imagePickerLauncher.launch("image/*") } // Make it clickable
+                                .background(Color.Gray)
                         ) {
-                            TextField(
-                                value = selectedQuoteState.value,
-                                onValueChange = {}, // Read-only
-                                readOnly = true,
-                                label = { Text("Favorite Quote") },
-                                trailingIcon = {
-                                    IconButton(onClick = { expanded = !expanded }) {
-                                        Icon(
-                                            imageVector = if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
-                                            contentDescription = "Dropdown Arrow"
+                            if (selectedImageUri != null) {
+                                AsyncImage(
+                                    model = selectedImageUri,
+                                    contentDescription = "Selected Profile Picture",
+                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                // Use a default image if no image is selected
+                                Image(
+                                    painter = painterResource(id = R.drawable.rubik_icon),
+                                    contentDescription = "Default Profile Picture",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(24.dp)) // Increased spacer width
+
+                        // Name and Quote
+                        Column {
+                            val userNameState = remember { mutableStateOf(prefs.getString("user_name", "Your Name") ?: "Your Name") }
+                            OutlinedTextField(
+                                value = userNameState.value,
+                                onValueChange = { newValue ->
+                                    userNameState.value = newValue
+                                    prefs.edit().putString("user_name", newValue).apply()
+                                },
+                                label = { Text("Your Name") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(16.dp)) // Increased spacer height
+
+                            // Dropdown for Favorite Quote
+                            val allQuotes = listOf(
+                                "Quote 1" to "The only way to do great work is to love what you do.",
+                                "Quote 2" to "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+                                "Quote 3" to "The best way to predict the future is to create it.",
+                                "Quote 4" to "Hard work beats talent when talent doesn't work hard."
+                            )
+                            // For now, assume all are unlocked.
+                            val unlockedQuotes = allQuotes
+
+                            var expanded by remember { mutableStateOf(false) }
+                            val selectedQuoteState = remember { mutableStateOf(prefs.getString("selected_quote", allQuotes.firstOrNull()?.second ?: "") ?: "") }
+
+                            ExposedDropdownMenuBox(
+                                expanded = expanded,
+                                onExpandedChange = { expanded = !expanded },
+                                modifier = Modifier.wrapContentWidth() // Made smaller
+                            ) {
+                                TextField(
+                                    value = allQuotes.firstOrNull { it.second == selectedQuoteState.value }?.first ?: "", // Display short label
+                                    onValueChange = {}, // Read-only
+                                    readOnly = true,
+                                    label = { Text("Favorite Quote") },
+                                    trailingIcon = {
+                                        IconButton(onClick = { expanded = !expanded }) {
+                                            Icon(
+                                                imageVector = if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                                                contentDescription = "Dropdown Arrow"
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .menuAnchor()
+                                        // Removed .fillMaxWidth() to allow wrapContentWidth() to take effect
+                                )
+
+                                ExposedDropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    unlockedQuotes.forEach { (label, fullQuote) ->
+                                        DropdownMenuItem(
+                                            text = { Text(label) }, // Display the short label
+                                            onClick = {
+                                                selectedQuoteState.value = fullQuote // Update state with the full quote
+                                                prefs.edit().putString("selected_quote", fullQuote).apply() // Save full quote
+                                                expanded = false
+                                            }
                                         )
                                     }
-                                },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                unlockedQuotes.forEach { quote ->
-                                    DropdownMenuItem(
-                                        text = { Text(quote) },
-                                        onClick = {
-                                            selectedQuoteState.value = quote
-                                            prefs.edit().putString("selected_quote", quote).apply()
-                                            expanded = false
-                                        }
-                                    )
                                 }
                             }
                         }
+                    }
+
+                    // New Rectangle for Achievements
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f) // Takes remaining vertical space
+                            .padding(16.dp) // Add some padding inside this box
+                            .background(
+                                color = DarkOrange, // Darker color
+                                shape = MaterialTheme.shapes.medium
+                            ),
+                        contentAlignment = Alignment.Center // Center the text
+                    ) {
+                        Text(
+                            text = "Achievements",
+                            color = Color.White, // Ensure text is visible on dark background
+                            style = MaterialTheme.typography.headlineSmall
+                        )
                     }
                 }
             }
