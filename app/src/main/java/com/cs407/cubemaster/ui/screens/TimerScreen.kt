@@ -53,11 +53,14 @@ fun TimerScreen(navController: NavController) {
     var showResetDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     var showTimesFullDialog by remember { mutableStateOf(false) }
+    var showBackDialog by remember { mutableStateOf(false) }
     val savedTimes = remember { mutableStateOf(listOf<Long>()) }
     var bestTime by remember { mutableStateOf(0L) }
     var worstTime by remember { mutableStateOf(0L) }
     var averageTime by remember { mutableStateOf(0L) }
     var average3of5 by remember { mutableStateOf(0L) }
+    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
+    var timeToDelete by remember { mutableStateOf<Long?>(null) }
 
 
     if (showResetDialog) {
@@ -78,6 +81,49 @@ fun TimerScreen(navController: NavController) {
             },
             dismissButton = {
                 Button(onClick = { showResetDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
+    }
+
+    if (showDeleteConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmationDialog = false },
+            title = { Text("Delete Time") },
+            text = { Text("Are you sure you want to delete this time?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        timeToDelete?.let { time ->
+                            val newTimes = savedTimes.value.toMutableList()
+                            newTimes.remove(time)
+                            savedTimes.value = newTimes
+
+                            bestTime = newTimes.minOrNull() ?: 0L
+                            worstTime = newTimes.maxOrNull() ?: 0L
+                            averageTime = if (newTimes.isNotEmpty()) newTimes.average().toLong() else 0L
+
+                            if (newTimes.size == 5) {
+                                val sortedTimes = newTimes.sorted()
+                                val middleThree = sortedTimes.subList(1, 4)
+                                average3of5 = middleThree.average().toLong()
+                            } else {
+                                average3of5 = 0L
+                            }
+                        }
+                        showDeleteConfirmationDialog = false
+                        timeToDelete = null
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showDeleteConfirmationDialog = false
+                    timeToDelete = null
+                }) {
                     Text("No")
                 }
             }
@@ -128,6 +174,27 @@ fun TimerScreen(navController: NavController) {
             confirmButton = {
                 Button(onClick = { showTimesFullDialog = false }) {
                     Text("OK")
+                }
+            }
+        )
+    }
+
+    if (showBackDialog) {
+        AlertDialog(
+            onDismissRequest = { showBackDialog = false },
+            title = { Text("Are you sure you want to go back?") },
+            text = { Text("Any unsaved times will be lost.") },
+            confirmButton = {
+                Button(onClick = {
+                    navController.navigate("result")
+                    showBackDialog = false
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showBackDialog = false }) {
+                    Text("No")
                 }
             }
         )
@@ -235,21 +302,8 @@ fun TimerScreen(navController: NavController) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(formatTime(time), color = Color.White)
                                 IconButton(onClick = {
-                                    val newTimes = savedTimes.value.toMutableList()
-                                    newTimes.remove(time)
-                                    savedTimes.value = newTimes
-
-                                    bestTime = newTimes.minOrNull() ?: 0L
-                                    worstTime = newTimes.maxOrNull() ?: 0L
-                                    averageTime = if (newTimes.isNotEmpty()) newTimes.average().toLong() else 0L
-
-                                    if (newTimes.size == 5) {
-                                        val sortedTimes = newTimes.sorted()
-                                        val middleThree = sortedTimes.subList(1, 4)
-                                        average3of5 = middleThree.average().toLong()
-                                    } else {
-                                        average3of5 = 0L
-                                    }
+                                    timeToDelete = time
+                                    showDeleteConfirmationDialog = true
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.Close,
@@ -265,7 +319,7 @@ fun TimerScreen(navController: NavController) {
         }
 
         Button(
-            onClick = { navController.navigate("result") },
+            onClick = { showBackDialog = true },
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(32.dp) // Adjusted padding
