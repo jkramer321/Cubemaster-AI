@@ -238,11 +238,6 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                         }
                     }
                 )
-                BottomNavItem(
-                    icon = Icons.Default.Settings,
-                    label = stringResource(R.string.nav_settings),
-                    onClick = { /* TODO */ }
-                )
             }
             Row(
                 modifier = Modifier
@@ -270,11 +265,6 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                 BottomNavItem(
                     icon = Icons.Default.Settings,
                     label = stringResource(R.string.nav_new_btn4),
-                    onClick = { /* TODO */ }
-                )
-                BottomNavItem(
-                    icon = Icons.Default.Settings,
-                    label = stringResource(R.string.nav_new_btn5),
                     onClick = { /* TODO */ }
                 )
             }

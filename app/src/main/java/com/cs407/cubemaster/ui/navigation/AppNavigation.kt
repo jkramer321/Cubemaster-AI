@@ -78,8 +78,8 @@ fun AppNavigation(
         }
         composable(
             "timer",
-            enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(700)) },
-            exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(700)) },
+            enterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
         ) {
