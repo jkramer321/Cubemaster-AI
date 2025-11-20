@@ -35,10 +35,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
 import kotlinx.coroutines.delay
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 @Composable
 fun TimerScreen(navController: NavController) {
@@ -62,6 +65,21 @@ fun TimerScreen(navController: NavController) {
     var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
     var timeToDelete by remember { mutableStateOf<Long?>(null) }
 
+    val context = LocalContext.current
+    val scrambles = remember { mutableStateOf<List<String>>(emptyList()) }
+    var currentScramble by remember { mutableStateOf("Loading Scramble...") }
+
+    LaunchedEffect(Unit) {
+        try {
+            val inputStream = context.assets.open("random_scrambles.csv")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            scrambles.value = reader.readLines()
+            currentScramble = scrambles.value.random()
+        } catch (e: Exception) {
+            currentScramble = "Failed to load scrambles"
+        }
+    }
+
 
     if (showResetDialog) {
         AlertDialog(
@@ -73,6 +91,9 @@ fun TimerScreen(navController: NavController) {
                     onClick = {
                         timeMillis = 0L
                         isActive = false
+                        if (scrambles.value.isNotEmpty()) {
+                            currentScramble = scrambles.value.random()
+                        }
                         showResetDialog = false
                     }
                 ) {
@@ -219,6 +240,14 @@ fun TimerScreen(navController: NavController) {
             verticalArrangement = Arrangement.Top
         ) {
             Spacer(modifier = Modifier.height(60.dp))
+            Button(onClick = {
+                if (scrambles.value.isNotEmpty()) {
+                    currentScramble = scrambles.value.random()
+                }
+            }) {
+                Text(text = "New Scramble")
+            }
+            Spacer(modifier = Modifier.height(16.dp)) // Add some space between the button and "Scramble"
             Text(
                 text = "Scramble",
                 color = Color.White,
@@ -226,10 +255,12 @@ fun TimerScreen(navController: NavController) {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "R' U' F R U' R' U' F' U2 R U' R' U F U F'",
+                text = formatScramble(currentScramble),
                 color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2, // Allow text to wrap to 2 lines
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis // Add ellipsis if it overflows
             )
             Spacer(modifier = Modifier.height(32.dp))
             Text(
@@ -327,6 +358,16 @@ fun TimerScreen(navController: NavController) {
             Text(text = "Back")
         }
     }
+}
+
+private fun formatScramble(scramble: String): String {
+    val moves = scramble.split(" ")
+    if (moves.size > 10) {
+        val line1 = moves.subList(0, 10).joinToString(" ")
+        val line2 = moves.subList(10, moves.size).joinToString(" ")
+        return "$line1\n$line2"
+    }
+    return scramble
 }
 
 private fun formatTime(timeMillis: Long): String {
