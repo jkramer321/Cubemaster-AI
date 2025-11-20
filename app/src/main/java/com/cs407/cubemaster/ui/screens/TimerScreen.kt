@@ -1,5 +1,6 @@
 package com.cs407.cubemaster.ui.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -207,7 +215,7 @@ fun TimerScreen(navController: NavController) {
             text = { Text("Any unsaved times will be lost.") },
             confirmButton = {
                 Button(onClick = {
-                    navController.navigate("result")
+                    navController.popBackStack()
                     showBackDialog = false
                 }) {
                     Text("Yes")
@@ -254,14 +262,27 @@ fun TimerScreen(navController: NavController) {
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = formatScramble(currentScramble),
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2, // Allow text to wrap to 2 lines
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis // Add ellipsis if it overflows
-            )
+            AnimatedContent(
+                targetState = currentScramble,
+                transitionSpec = {
+                    slideInVertically(
+                        animationSpec = tween(500),
+                        initialOffsetY = { fullHeight -> -fullHeight }
+                    ) togetherWith slideOutVertically(
+                        animationSpec = tween(500),
+                        targetOffsetY = { fullHeight -> fullHeight }
+                    )
+                }, label = ""
+            ) { scramble ->
+                Text(
+                    text = formatScramble(scramble),
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2, // Allow text to wrap to 2 lines
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis // Add ellipsis if it overflows
+                )
+            }
             Spacer(modifier = Modifier.height(32.dp))
             Text(
                 text = formatTime(timeMillis),
@@ -329,18 +350,24 @@ fun TimerScreen(navController: NavController) {
                 ) {
                     Text("Saved Times", color = Color.White, fontWeight = FontWeight.Bold)
                     LazyColumn {
-                        items(savedTimes.value) { time ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(formatTime(time), color = Color.White)
-                                IconButton(onClick = {
-                                    timeToDelete = time
-                                    showDeleteConfirmationDialog = true
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Remove Time",
-                                        tint = Color.White
-                                    )
+                        items(savedTimes.value, key = { it }) { time ->
+                            AnimatedVisibility(
+                                visible = true, // Always visible once added, animations handle entry/exit
+                                enter = expandVertically(animationSpec = tween(500)),
+                                exit = shrinkVertically(animationSpec = tween(500))
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(formatTime(time), color = Color.White)
+                                    IconButton(onClick = {
+                                        timeToDelete = time
+                                        showDeleteConfirmationDialog = true
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Remove Time",
+                                            tint = Color.White
+                                        )
+                                    }
                                 }
                             }
                         }

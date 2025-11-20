@@ -29,8 +29,7 @@ fun PermissionScreen(
     navController: NavController,
     permissionGranted: Boolean,
     showPermissionDeniedMessage: Boolean,
-    requestPermission: () -> Unit,
-    openSettings: () -> Unit
+    requestPermission: () -> Unit
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -58,14 +57,8 @@ fun PermissionScreen(
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(32.dp))
-            if (showPermissionDeniedMessage) {
-                Button(onClick = openSettings) {
-                    Text(text = stringResource(R.string.button_open_settings))
-                }
-            } else {
-                Button(onClick = requestPermission, enabled = !permissionGranted) {
-                    Text(text = stringResource(R.string.button_grant_permission))
-                }
+            Button(onClick = requestPermission, enabled = !permissionGranted) {
+                Text(text = stringResource(R.string.button_grant_permission))
             }
         }
         Button(
@@ -98,7 +91,7 @@ fun PermissionScreenPreview() {
             permissionGranted = false,
             showPermissionDeniedMessage = false,
             requestPermission = {},
-            openSettings = {}
+
         )
     }
 }
@@ -112,7 +105,7 @@ fun PermissionScreenGrantedPreview() {
             permissionGranted = true,
             showPermissionDeniedMessage = false,
             requestPermission = {},
-            openSettings = {}
+
         )
     }
 }
@@ -126,7 +119,7 @@ fun PermissionScreenDeniedPreview() {
             permissionGranted = false,
             showPermissionDeniedMessage = true,
             requestPermission = {},
-            openSettings = {}
+
         )
     }
 }
