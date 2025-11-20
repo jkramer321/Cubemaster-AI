@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.ui.screens.PermissionScreen
+import com.cs407.cubemaster.ui.screens.ProfileScreen
 import com.cs407.cubemaster.ui.screens.ResultScreen
 import com.cs407.cubemaster.ui.screens.ScanScreen
 import com.cs407.cubemaster.ui.screens.StartScreen
@@ -84,6 +85,15 @@ fun AppNavigation(
             popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
         ) {
             TimerScreen(navController = navController)
+        }
+        composable(
+            "profile",
+            enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(700)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
+        ) {
+            ProfileScreen()
         }
     }
 }

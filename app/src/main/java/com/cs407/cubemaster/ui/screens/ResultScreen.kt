@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
@@ -263,9 +264,9 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                     onClick = { /* TODO */ }
                 )
                 BottomNavItem(
-                    icon = Icons.Default.Settings,
-                    label = stringResource(R.string.nav_new_btn4),
-                    onClick = { /* TODO */ }
+                    icon = Icons.Default.Person,
+                    label = stringResource(R.string.nav_profile),
+                    onClick = { navController.navigate("profile") }
                 )
             }
         }
