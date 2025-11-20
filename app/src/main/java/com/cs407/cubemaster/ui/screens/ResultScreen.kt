@@ -25,8 +25,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -167,79 +169,110 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
         }
 
         // Bottom navigation bar
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.5f) // Adjusted weight for a bottom-bar feel
+                .weight(0.8f) // Adjusted weight for a bottom-bar feel
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .background(DarkOrange),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceAround
         ) {
-            BottomNavItem(
-                icon = Icons.Default.Home,
-                label = stringResource(R.string.nav_home),
-                onClick = { showDialog = true }
-            )
-            BottomNavItem(
-                icon = Icons.AutoMirrored.Filled.List,
-                label = stringResource(R.string.nav_steps),
-                onClick = { showAnalysis = false }
-            )
-            BottomNavItem(
-                icon = Icons.Default.Analytics,
-                label = stringResource(R.string.nav_analysis),
-                onClick = { showAnalysis = true }
-            )
-            BottomNavItem(
-                icon = Icons.Default.School,
-                label = stringResource(R.string.nav_guide),
-                onClick = {
-                    val assetManager = context.assets
-                    val pdfName = "official_guide.pdf"
-                    val file = File(context.cacheDir, pdfName)
-                    if (!file.exists()) {
-                        try {
-                            assetManager.open(pdfName).use { inputStream ->
-                                FileOutputStream(file).use { outputStream ->
-                                    inputStream.copyTo(outputStream)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BottomNavItem(
+                    icon = Icons.Default.Home,
+                    label = stringResource(R.string.nav_home),
+                    onClick = { showDialog = true }
+                )
+                BottomNavItem(
+                    icon = Icons.AutoMirrored.Filled.List,
+                    label = stringResource(R.string.nav_steps),
+                    onClick = { showAnalysis = false }
+                )
+                BottomNavItem(
+                    icon = Icons.Default.Analytics,
+                    label = stringResource(R.string.nav_analysis),
+                    onClick = { showAnalysis = true }
+                )
+                BottomNavItem(
+                    icon = Icons.Default.School,
+                    label = stringResource(R.string.nav_guide),
+                    onClick = {
+                        val assetManager = context.assets
+                        val pdfName = "official_guide.pdf"
+                        val file = File(context.cacheDir, pdfName)
+                        if (!file.exists()) {
+                            try {
+                                assetManager.open(pdfName).use { inputStream ->
+                                    FileOutputStream(file).use { outputStream ->
+                                        inputStream.copyTo(outputStream)
+                                    }
                                 }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Toast.makeText(context, context.getString(R.string.error_copying_file), Toast.LENGTH_SHORT).show()
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            Toast.makeText(context, context.getString(R.string.error_copying_file), Toast.LENGTH_SHORT).show()
+                        }
+
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            context.applicationContext.packageName + ".provider",
+                            file
+                        )
+
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, "application/pdf")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(context, context.getString(R.string.error_no_pdf_viewer), Toast.LENGTH_LONG).show()
                         }
                     }
-
-                    val uri = FileProvider.getUriForFile(
-                        context,
-                        context.applicationContext.packageName + ".provider",
-                        file
-                    )
-
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(uri, "application/pdf")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-
-                    try {
-                        context.startActivity(intent)
-                    } catch (e: ActivityNotFoundException) {
-                        Toast.makeText(context, context.getString(R.string.error_no_pdf_viewer), Toast.LENGTH_LONG).show()
-                    }
-                }
-            )
-            BottomNavItem(
-                icon = Icons.Default.Settings,
-                label = stringResource(R.string.nav_settings),
-                onClick = { /* TODO */ }
-            )
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // New placeholder buttons
+                BottomNavItem(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(R.string.nav_new_btn1),
+                    onClick = { navController.navigate("timer") }
+                )
+                BottomNavItem(
+                    icon = Icons.Default.Settings,
+                    label = stringResource(R.string.nav_new_btn2),
+                    onClick = { /* TODO */ }
+                )
+                BottomNavItem(
+                    icon = Icons.Default.Settings,
+                    label = stringResource(R.string.nav_new_btn3),
+                    onClick = { /* TODO */ }
+                )
+                BottomNavItem(
+                    icon = Icons.Default.Person,
+                    label = stringResource(R.string.nav_profile),
+                    onClick = { navController.navigate("profile") }
+                )
+            }
         }
     }
 }
-
-@Composable
+ @Composable
 fun AnalysisView() {
     Box(
         modifier = Modifier.fillMaxSize(),
