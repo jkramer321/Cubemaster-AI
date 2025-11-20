@@ -23,10 +23,7 @@ import com.cs407.cubemaster.ui.navigation.AppNavigation
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import androidx.compose.runtime.remember
-import com.cs407.cubemaster.ui.theme.DarkBlue
-import com.cs407.cubemaster.ui.theme.DarkGreen
-import com.cs407.cubemaster.ui.theme.LightBlue
-import com.cs407.cubemaster.ui.theme.LightGreen
+
 import com.cs407.cubemaster.ui.theme.LightOrange
 
 class MainActivity : ComponentActivity() {
@@ -49,15 +46,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var theme by remember { mutableStateOf("Orange") } // Theme state
-
-            CubemasterTheme(theme = theme) {
+            CubemasterTheme() {
                 val gradientBrush = Brush.verticalGradient(
-                    colors = when (theme) {
-                        "Blue" -> listOf(LightBlue, DarkBlue)
-                        "Green" -> listOf(LightGreen, DarkGreen)
-                        else -> listOf(LightOrange, DarkOrange)
-                    }
+                    colors = listOf(LightOrange, DarkOrange)
                 )
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -74,14 +65,7 @@ class MainActivity : ComponentActivity() {
                             showPermissionDeniedMessage = showPermissionDeniedMessage,
                             requestPermission = {
                                 requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-                            },
-                            openSettings = {
-                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                                val uri = Uri.fromParts("package", packageName, null)
-                                intent.data = uri
-                                startActivity(intent)
-                            },
-                            setTheme = { newTheme -> theme = newTheme } // Pass lambda to update theme
+                            }
                         )
                     }
                 }

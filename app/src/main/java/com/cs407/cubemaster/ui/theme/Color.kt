@@ -14,11 +14,3 @@ val DarkYellow = Color(0xFFFFB300)
 val Blue = Color(0xFF0000FF)
 val LightOrange = Color(0xFFE6A788)
 val DarkOrange = Color(0xFF8C2B0A)
-
-// Blue Theme
-val LightBlue = Color(0xFF88A7E6)
-val DarkBlue = Color(0xFF0A3B8C)
-
-// Green Theme
-val LightGreen = Color(0xFF88E6A7)
-val DarkGreen = Color(0xFF0A8C3B)

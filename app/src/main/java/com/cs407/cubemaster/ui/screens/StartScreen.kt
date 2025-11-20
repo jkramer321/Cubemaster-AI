@@ -110,14 +110,7 @@ fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
                 ) {
                     Text(text = stringResource(R.string.button_start), fontSize = 24.sp)
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                IconButton(onClick = { navController.navigate("settings") }) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
+
             }
         }
     }
