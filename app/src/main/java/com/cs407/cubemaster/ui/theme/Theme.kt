@@ -17,20 +17,28 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = Pink80
 )
 
-private val LightColorScheme = lightColorScheme(
+private val OrangeColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
     tertiary = Pink40,
     background = DarkOrange,
     surface = DarkOrange
+)
 
-    /* Other default colors to override
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val BlueColorScheme = lightColorScheme(
+    primary = Purple40,
+    secondary = PurpleGrey40,
+    tertiary = Pink40,
+    background = DarkBlue,
+    surface = DarkBlue
+)
+
+private val GreenColorScheme = lightColorScheme(
+    primary = Purple40,
+    secondary = PurpleGrey40,
+    tertiary = Pink40,
+    background = DarkGreen,
+    surface = DarkGreen
 )
 
 @Composable
@@ -38,6 +46,7 @@ fun CubemasterTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
+    theme: String = "Orange", // New parameter
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -47,7 +56,11 @@ fun CubemasterTheme(
         }
 
         darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        else -> when (theme) {
+            "Blue" -> BlueColorScheme
+            "Green" -> GreenColorScheme
+            else -> OrangeColorScheme
+        }
     }
 
     MaterialTheme(

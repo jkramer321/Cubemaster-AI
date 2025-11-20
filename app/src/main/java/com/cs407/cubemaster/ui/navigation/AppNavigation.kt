@@ -13,6 +13,7 @@ import com.cs407.cubemaster.ui.screens.PermissionScreen
 import com.cs407.cubemaster.ui.screens.ProfileScreen
 import com.cs407.cubemaster.ui.screens.ResultScreen
 import com.cs407.cubemaster.ui.screens.ScanScreen
+import com.cs407.cubemaster.ui.screens.SettingsScreen
 import com.cs407.cubemaster.ui.screens.StartScreen
 import com.cs407.cubemaster.ui.screens.TimerScreen
 import com.cs407.cubemaster.ui.screens.ValidationScreen
@@ -22,7 +23,8 @@ fun AppNavigation(
     permissionGranted: Boolean,
     showPermissionDeniedMessage: Boolean,
     requestPermission: () -> Unit,
-    openSettings: () -> Unit
+    openSettings: () -> Unit,
+    setTheme: (String) -> Unit
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "start") {
@@ -94,6 +96,15 @@ fun AppNavigation(
             popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
         ) {
             ProfileScreen(navController = navController)
+        }
+        composable(
+            "settings",
+            enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(700)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
+        ) {
+            SettingsScreen(navController = navController, setTheme = setTheme)
         }
     }
 }
