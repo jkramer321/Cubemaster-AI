@@ -44,6 +44,11 @@
     <string name="nav_analysis">Analysis</string>
     <string name="nav_guide">Guide</string>
     <string name="nav_settings">Settings</string>
+    <string name="nav_new_btn1">Timer</string>
+    <string name="nav_new_btn2">New Btn 2</string>
+    <string name="nav_new_btn3">New Btn 3</string>
+    <string name="nav_new_btn4">New Btn 4</string>
+    <string name="nav_new_btn5">New Btn 5</string>
 
     <!-- Error Messages -->
     <string name="error_copying_file">Error copying file</string>
