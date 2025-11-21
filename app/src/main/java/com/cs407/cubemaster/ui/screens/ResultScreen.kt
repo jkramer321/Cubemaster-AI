@@ -66,6 +66,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
+import com.cs407.cubemaster.ui.components.Interactive3DCube
 
 @Composable
 fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
@@ -272,18 +273,36 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
         }
     }
 }
- @Composable
+@Composable
 fun AnalysisView() {
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            text = stringResource(R.string.analysis_total_steps, 10),
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp
+        // Interactive 3D Rubik's Cube
+        Interactive3DCube(
+            modifier = Modifier.fillMaxSize()
         )
+
+        // Optional: Add text overlay at the top
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .align(Alignment.TopCenter)
+        ) {
+            Text(
+                text = "Drag to rotate • Use +/- to zoom",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .background(
+                        color = Color.Black.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
     }
 }
 
