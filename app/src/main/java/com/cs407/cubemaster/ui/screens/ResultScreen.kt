@@ -9,43 +9,24 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,29 +34,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.R
+import com.cs407.cubemaster.ui.components.Interactive3DCube
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
-import com.cs407.cubemaster.ui.components.Interactive3DCube
 
 @Composable
 fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
-    val gradientBrush = Brush.verticalGradient(
-        colors = listOf(
-            LightOrange,
-            DarkOrange
-        )
-    )
+    val gradientBrush = Brush.verticalGradient(colors = listOf(LightOrange, DarkOrange))
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var showAnalysis by remember { mutableStateOf(false) }
@@ -86,12 +61,10 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
             title = { Text(stringResource(R.string.dialog_are_you_sure)) },
             text = { Text(stringResource(R.string.dialog_lose_progress)) },
             confirmButton = {
-                Button(
-                    onClick = {
-                        navController.navigate("start")
-                        showDialog = false
-                    }
-                ) {
+                Button(onClick = {
+                    navController.navigate("start")
+                    showDialog = false
+                }) {
                     Text(stringResource(R.string.button_yes))
                 }
             },
@@ -103,21 +76,13 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
         )
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(gradientBrush)
-    ) {
-        // Top box for the steps
+    Column(modifier = modifier.fillMaxSize().background(gradientBrush)) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(2f)
-                .padding(32.dp),
+            modifier = Modifier.fillMaxWidth().weight(1f).padding(32.dp),
             contentAlignment = Alignment.Center
         ) {
             if (showAnalysis) {
-                AnalysisView()
+                Interactive3DCube()
             } else {
                 BoxWithConstraints {
                     val boxWidth = this.maxWidth
@@ -128,40 +93,23 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                         targetState = currentStep,
                         transitionSpec = {
                             if (targetState > initialState) {
-                                slideInVertically(animationSpec = tween(durationMillis = 600)) { height -> -height } togetherWith slideOutVertically(animationSpec = tween(durationMillis = 600)) { height -> height }
+                                slideInVertically(animationSpec = tween(600)) { -it } togetherWith slideOutVertically(animationSpec = tween(600)) { it }
                             } else {
-                                slideInVertically(animationSpec = tween(durationMillis = 600)) { height -> height } togetherWith slideOutVertically(animationSpec = tween(durationMillis = 600)) { height -> -height }
+                                slideInVertically(animationSpec = tween(600)) { it } togetherWith slideOutVertically(animationSpec = tween(600)) { -it }
                             }
-                        }
+                        },
+                        label = "step"
                     ) { targetStep ->
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
                         ) {
                             if (targetStep < steps.size) {
-                                StepCard(
-                                    step = targetStep + 1,
-                                    isExpanded = false,
-                                    content = steps[targetStep],
-                                    onClick = { currentStep++ }
-                                )
+                                StepCard(targetStep + 1, false, steps[targetStep], { currentStep++ })
                             }
-
-                            StepCard(
-                                step = targetStep,
-                                isExpanded = true,
-                                content = steps[targetStep - 1],
-                                onClick = { /* Already expanded */ },
-                                width = boxWidth
-                            )
-
+                            StepCard(targetStep, true, steps[targetStep - 1], {}, boxWidth)
                             if (targetStep > 1) {
-                                StepCard(
-                                    step = targetStep - 1,
-                                    isExpanded = false,
-                                    content = steps[targetStep - 2],
-                                    onClick = { currentStep-- }
-                                )
+                                StepCard(targetStep - 1, false, steps[targetStep - 2], { currentStep-- })
                             }
                         }
                     }
@@ -169,139 +117,106 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
             }
         }
 
-        // Bottom navigation bar
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.8f) // Adjusted weight for a bottom-bar feel
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .background(DarkOrange),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceAround
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BottomNavItem(
-                    icon = Icons.Default.Home,
-                    label = stringResource(R.string.nav_home),
-                    onClick = { showDialog = true }
-                )
-                BottomNavItem(
-                    icon = Icons.AutoMirrored.Filled.List,
-                    label = stringResource(R.string.nav_steps),
-                    onClick = { showAnalysis = false }
-                )
-                BottomNavItem(
-                    icon = Icons.Default.Analytics,
-                    label = stringResource(R.string.nav_analysis),
-                    onClick = { showAnalysis = true }
-                )
-                BottomNavItem(
-                    icon = Icons.Default.School,
-                    label = stringResource(R.string.nav_guide),
-                    onClick = {
-                        val assetManager = context.assets
-                        val pdfName = "official_guide.pdf"
-                        val file = File(context.cacheDir, pdfName)
+        ModernBottomNavBar(
+            navController = navController,
+            currentScreen = if (showAnalysis) "cube" else "steps",
+            onNavigate = { dest ->
+                when (dest) {
+                    "home" -> showDialog = true
+                    "timer" -> navController.navigate("timer")
+                    "cube" -> showAnalysis = true
+                    "profile" -> navController.navigate("profile")
+                    "guide" -> {
+                        val file = File(context.cacheDir, "official_guide.pdf")
                         if (!file.exists()) {
                             try {
-                                assetManager.open(pdfName).use { inputStream ->
-                                    FileOutputStream(file).use { outputStream ->
-                                        inputStream.copyTo(outputStream)
+                                context.assets.open("official_guide.pdf").use { input ->
+                                    FileOutputStream(file).use { output ->
+                                        input.copyTo(output)
                                     }
                                 }
                             } catch (e: Exception) {
                                 e.printStackTrace()
-                                Toast.makeText(context, context.getString(R.string.error_copying_file), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
                             }
                         }
-
-                        val uri = FileProvider.getUriForFile(
-                            context,
-                            context.applicationContext.packageName + ".provider",
-                            file
-                        )
-
+                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
                         val intent = Intent(Intent.ACTION_VIEW).apply {
                             setDataAndType(uri, "application/pdf")
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
-
                         try {
                             context.startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
-                            Toast.makeText(context, context.getString(R.string.error_no_pdf_viewer), Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "No PDF viewer", Toast.LENGTH_LONG).show()
                         }
                     }
-                )
+                }
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // New placeholder buttons
-                BottomNavItem(
-                    icon = Icons.Default.Timer,
-                    label = stringResource(R.string.nav_new_btn1),
-                    onClick = { navController.navigate("timer") }
-                )
-                BottomNavItem(
-                    icon = Icons.Default.Settings,
-                    label = stringResource(R.string.nav_new_btn2),
-                    onClick = { /* TODO */ }
-                )
-                BottomNavItem(
-                    icon = Icons.Default.Settings,
-                    label = stringResource(R.string.nav_new_btn3),
-                    onClick = { /* TODO */ }
-                )
-                BottomNavItem(
-                    icon = Icons.Default.Person,
-                    label = stringResource(R.string.nav_profile),
-                    onClick = { navController.navigate("profile") }
-                )
-            }
-        }
+        )
     }
 }
-@Composable
-fun AnalysisView() {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Interactive 3D Rubik's Cube
-        Interactive3DCube(
-            modifier = Modifier.fillMaxSize()
-        )
 
-        // Optional: Add text overlay at the top
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .align(Alignment.TopCenter)
+@Composable
+fun ModernBottomNavBar(navController: NavController, currentScreen: String, onNavigate: (String) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().height(80.dp).background(Color(0xFF2C2C2C))
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        NavBarItem(Icons.Default.Home, "Home", false) { onNavigate("home") }
+        NavBarItem(Icons.Default.Timer, "Timer", false) { onNavigate("timer") }
+        CubeNavBarItem(currentScreen == "cube") { onNavigate("cube") }
+        NavBarItem(Icons.Default.Person, "Profile", false) { onNavigate("profile") }
+        NavBarItem(Icons.Default.School, "Guide", false) { onNavigate("guide") }
+    }
+}
+
+@Composable
+fun NavBarItem(icon: ImageVector, label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(60.dp).fillMaxHeight().clickable(onClick = onClick).padding(4.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = if (isSelected) Color(0xFFFFA726) else Color.White,
+            modifier = Modifier.size(28.dp)
+        )
+        Text(
+            text = label,
+            color = if (isSelected) Color(0xFFFFA726) else Color.White,
+            fontSize = 11.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun CubeNavBarItem(isSelected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.size(64.dp).clip(CircleShape)
+            .background(if (isSelected) Color(0xFF4CAF50) else Color(0xFF2E7D32))
+            .clickable(onClick = onClick)
+            .border(3.dp, if (isSelected) Color(0xFF81C784) else Color(0xFF4CAF50), CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Drag to rotate • Use +/- to zoom",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                modifier = Modifier
-                    .background(
-                        color = Color.Black.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            Icon(
+                imageVector = Icons.Default.Category,
+                contentDescription = "Cube",
+                tint = Color.White,
+                modifier = Modifier.size(32.dp)
             )
+            Text(text = "CUBE", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -310,24 +225,19 @@ fun AnalysisView() {
 fun StepCard(step: Int, isExpanded: Boolean, content: String, onClick: () -> Unit, width: Dp? = null) {
     val height by animateDpAsState(
         targetValue = if (isExpanded) width ?: 120.dp else 50.dp,
-        animationSpec = tween(300)
+        animationSpec = tween(300),
+        label = "height"
     )
 
-    val cardModifier = (if (isExpanded) Modifier.width(width ?: 120.dp) else Modifier.fillMaxWidth())
-        .height(height)
-        .clickable(onClick = onClick)
-
     Card(
-        modifier = cardModifier,
+        modifier = (if (isExpanded) Modifier.width(width ?: 120.dp) else Modifier.fillMaxWidth())
+            .height(height).clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isExpanded) LightOrange else DarkOrange.copy(alpha = 0.6f)
         )
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (isExpanded) {
                 Text(
                     text = content,
@@ -346,30 +256,6 @@ fun StepCard(step: Int, isExpanded: Boolean, content: String, onClick: () -> Uni
                 )
             }
         }
-    }
-}
-
-@Composable
-fun BottomNavItem(icon: ImageVector, label: String, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxHeight()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 4.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = Color.White,
-        )
-        Text(
-            text = label,
-            color = Color.White,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center
-        )
     }
 }
 
