@@ -1,5 +1,7 @@
 package com.cs407.cubemaster.ui.screens
 
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -28,13 +32,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.cs407.cubemaster.R
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
 
 @Composable
-fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController) {
+fun ValidationScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    imageUri: String = ""
+) {
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
             LightOrange,
@@ -56,8 +65,27 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
                     .weight(2f) // Make this box take up 2/3 of the space
                     .padding(32.dp)
                     .border(4.dp, LightOrange, RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(16.dp))
             ) {
-                // This is the top half for the camera view
+                if (imageUri.isNotEmpty()) {
+                    Image(
+                        painter = rememberAsyncImagePainter(Uri.parse(imageUri)),
+                        contentDescription = stringResource(R.string.cd_captured_cube),
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No image captured",
+                            color = Color.White,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
             }
             Box(
                 modifier = Modifier

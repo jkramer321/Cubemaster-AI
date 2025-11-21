@@ -1,6 +1,7 @@
 package com.cs407.cubemaster.ui.screens
 
 import android.Manifest
+import android.net.Uri
 import androidx.camera.core.CameraSelector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -57,6 +58,7 @@ import com.google.accompanist.permissions.shouldShowRationale
 fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
+    var isCapturing by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (!cameraPermissionState.status.isGranted) {
@@ -81,8 +83,8 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(2f)
-                    .padding(32.dp)
+                    .weight(3f)
+                    .padding(16.dp)
                     .border(4.dp, LightOrange, RoundedCornerShape(16.dp))
                     .clip(RoundedCornerShape(16.dp))
             ) {
@@ -90,7 +92,13 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                 if (cameraPermissionState.status.isGranted) {
                     CameraPreview(
                         modifier = Modifier.fillMaxSize(),
-                        lensFacing = lensFacing
+                        lensFacing = lensFacing,
+                        onCubeDetected = { uri ->
+                            isCapturing = true
+                            val encodedUri = Uri.encode(uri.toString())
+                            navController.navigate("validation/$encodedUri")
+                        },
+                        enableDetection = !isCapturing
                     )
 
                     // Semi-transparent cube overlay for scan guidance
@@ -99,9 +107,9 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                         contentAlignment = Alignment.Center
                     ) {
                         CubeOverlay(
-                            color = Color.White,
+                            color = if (isCapturing) Color.Green else Color.White,
                             alpha = 0.8f,
-                            strokeWidth = 3f
+                            strokeWidth = if (isCapturing) 4f else 3f
                         )
                     }
                 } else {
@@ -143,19 +151,12 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                     )
                 }
 
-                // Next button (top right)
-                Button(
-                    onClick = { navController.navigate("validation") },
-                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
-                ) {
-                    Text(text = stringResource(R.string.button_next))
-                }
             }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(32.dp)
+                    .padding(16.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(DarkOrange),
                 contentAlignment = Alignment.Center
@@ -164,15 +165,25 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.scan_instruction),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        fontSize = 20.sp
-                    )
+                    if (!isCapturing) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.scan_instruction),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            fontSize = 20.sp
+                        )
+                    } else {
+                        Text(
+                            text = "Capturing cube...",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            fontSize = 20.sp
+                        )
+                    }
                 }
             }
         }

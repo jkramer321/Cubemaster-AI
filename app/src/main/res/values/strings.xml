@@ -19,7 +19,7 @@
     <!-- Scan Screen -->
     <string name="camera_permission_required">Camera permission is required to scan the cube</string>
     <string name="requesting_permission">Requesting camera permission...</string>
-    <string name="scan_instruction">Please keep a single side\nfacing the camera</string>
+    <string name="scan_instruction">Position cube to show 3 sides\nwithin the white outline</string>
     <string name="cd_flip_camera">Flip Camera</string>
 
     <!-- Navigation Buttons -->
@@ -30,6 +30,7 @@
 
     <!-- Validation Screen -->
     <string name="validation_prompt">Does this look correct?</string>
+    <string name="cd_captured_cube">Captured Rubik\'s Cube Image</string>
 
     <!-- Result Screen -->
     <string name="dialog_are_you_sure">Are you sure?</string>

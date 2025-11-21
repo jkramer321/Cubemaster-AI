@@ -6,9 +6,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.cs407.cubemaster.ui.screens.PermissionScreen
 import com.cs407.cubemaster.ui.screens.ProfileScreen
 import com.cs407.cubemaster.ui.screens.ResultScreen
@@ -61,13 +63,15 @@ fun AppNavigation(
             ScanScreen(navController = navController)
         }
         composable(
-            "validation",
+            "validation/{imageUri}",
+            arguments = listOf(navArgument("imageUri") { type = NavType.StringType }),
             enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(700)) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(700)) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
-        ) {
-            ValidationScreen(navController = navController)
+        ) { backStackEntry ->
+            val imageUri = backStackEntry.arguments?.getString("imageUri") ?: ""
+            ValidationScreen(navController = navController, imageUri = imageUri)
         }
         composable(
             "result",
