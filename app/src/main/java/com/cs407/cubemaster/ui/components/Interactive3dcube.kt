@@ -5,11 +5,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +24,9 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.cs407.cubemaster.data.Cube
 import kotlin.math.cos
 import kotlin.math.sin
@@ -34,65 +40,220 @@ fun Interactive3DCube(
     var rotationY by remember { mutableStateOf(35f) }
     var scale by remember { mutableStateOf(1f) }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        rotationY += dragAmount.x * 0.3f
-                        rotationX -= dragAmount.y * 0.3f
-                    }
-                }
-        ) {
-            val cubeSize = size.minDimension * 0.4f * scale
-            val centerX = size.width / 2f
-            val centerY = size.height / 2f
+    // Create a mutable cube that we can rotate
+    var currentCube by remember { mutableStateOf(cube.freeze()) }
 
-            draw3DRubiksCube(
-                centerX = centerX,
-                centerY = centerY,
-                cubeSize = cubeSize,
-                rotationX = rotationX,
-                rotationY = rotationY,
-                cube = cube
+    Column(modifier = modifier.fillMaxSize()) {
+        // Cube display area
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            rotationY += dragAmount.x * 0.3f
+                            rotationX -= dragAmount.y * 0.3f
+                        }
+                    }
+            ) {
+                val cubeSize = size.minDimension * 0.4f * scale
+                val centerX = size.width / 2f
+                val centerY = size.height / 2f
+
+                draw3DRubiksCube(
+                    centerX = centerX,
+                    centerY = centerY,
+                    cubeSize = cubeSize,
+                    rotationX = rotationX,
+                    rotationY = rotationY,
+                    cube = currentCube
+                )
+            }
+
+            // Zoom controls
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                IconButton(
+                    onClick = { scale = (scale + 0.2f).coerceAtMost(3f) },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color.White.copy(alpha = 0.8f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Zoom In",
+                        tint = Color.Black
+                    )
+                }
+                IconButton(
+                    onClick = { scale = (scale - 0.2f).coerceAtLeast(0.5f) },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color.White.copy(alpha = 0.8f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Remove,
+                        contentDescription = "Zoom Out",
+                        tint = Color.Black
+                    )
+                }
+            }
+        }
+
+        // Cube move controls
+        CubeMoveControls(
+            onMove = { move ->
+                currentCube = performMove(currentCube, move)
+            },
+            onReset = {
+                currentCube = createSolvedCube()
+            }
+        )
+    }
+}
+
+@Composable
+fun CubeMoveControls(
+    onMove: (String) -> Unit,
+    onReset: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF2C2C2C))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Cube Moves",
+            color = Color.White,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        // First row: F, R, U
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            MoveButton("F", Color(0xFF4CAF50)) { onMove("F") }
+            MoveButton("R", Color(0xFF2196F3)) { onMove("R") }
+            MoveButton("U", Color(0xFFFFC107)) { onMove("U") }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Second row: F', R', U'
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            MoveButton("F'", Color(0xFF388E3C)) { onMove("F'") }
+            MoveButton("R'", Color(0xFF1976D2)) { onMove("R'") }
+            MoveButton("U'", Color(0xFFFFA000)) { onMove("U'") }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Third row: L, B, D
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            MoveButton("L", Color(0xFFFF9800)) { onMove("L") }
+            MoveButton("B", Color(0xFF009688)) { onMove("B") }
+            MoveButton("D", Color(0xFFF44336)) { onMove("D") }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Fourth row: L', B', D'
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            MoveButton("L'", Color(0xFFE65100)) { onMove("L'") }
+            MoveButton("B'", Color(0xFF00695C)) { onMove("B'") }
+            MoveButton("D'", Color(0xFFC62828)) { onMove("D'") }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Reset button
+        Button(
+            onClick = onReset,
+            modifier = Modifier
+                .fillMaxWidth(0.5f)
+                .height(48.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF9C27B0)
+            ),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Text(
+                text = "RESET",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
             )
         }
-
-        // Zoom controls
-        Column(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            IconButton(
-                onClick = { scale = (scale + 0.2f).coerceAtMost(3f) },
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(Color.White.copy(alpha = 0.8f), CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Zoom In",
-                    tint = Color.Black
-                )
-            }
-            IconButton(
-                onClick = { scale = (scale - 0.2f).coerceAtLeast(0.5f) },
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(Color.White.copy(alpha = 0.8f), CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Remove,
-                    contentDescription = "Zoom Out",
-                    tint = Color.Black
-                )
-            }
-        }
     }
+}
+
+@Composable
+fun MoveButton(
+    label: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .width(100.dp)
+            .height(56.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = color
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text(
+            text = label,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+    }
+}
+
+// Perform Rubik's Cube moves
+fun performMove(cube: Cube, move: String): Cube {
+    val newCube = cube.freeze()
+
+    when (move) {
+        "F" -> newCube.rotateCol(2, rotateUp = true)
+        "F'" -> newCube.rotateCol(2, rotateUp = false)
+        "R" -> newCube.rotateRow(2, rotateRight = false)
+        "R'" -> newCube.rotateRow(2, rotateRight = true)
+        "U" -> newCube.rotateRow(0, rotateRight = true)
+        "U'" -> newCube.rotateRow(0, rotateRight = false)
+        "L" -> newCube.rotateCol(0, rotateUp = false)
+        "L'" -> newCube.rotateCol(0, rotateUp = true)
+        "B" -> newCube.rotateCol(0, rotateUp = false)
+        "B'" -> newCube.rotateCol(0, rotateUp = true)
+        "D" -> newCube.rotateRow(2, rotateRight = false)
+        "D'" -> newCube.rotateRow(2, rotateRight = true)
+    }
+
+    return newCube
 }
 
 private fun DrawScope.draw3DRubiksCube(
@@ -105,11 +266,8 @@ private fun DrawScope.draw3DRubiksCube(
 ) {
     val cubieSize = cubeSize / 3f
     val gap = cubieSize * 0.04f
-
-    // Collect all drawable faces
     val allFaces = mutableListOf<DrawableFace>()
 
-    // Generate all 27 cubies
     for (x in -1..1) {
         for (y in -1..1) {
             for (z in -1..1) {
@@ -120,8 +278,6 @@ private fun DrawScope.draw3DRubiksCube(
                 )
 
                 val colors = getCubieColors(cube, x, y, z)
-
-                // Get faces for this cubie
                 val cubieFaces = generateCubieFaces(
                     position = worldPos,
                     size = cubieSize,
@@ -131,16 +287,12 @@ private fun DrawScope.draw3DRubiksCube(
                     centerX = centerX,
                     centerY = centerY
                 )
-
                 allFaces.addAll(cubieFaces)
             }
         }
     }
 
-    // Sort faces by depth (furthest first - painter's algorithm)
     val sortedFaces = allFaces.sortedBy { it.depth }
-
-    // Draw all faces
     sortedFaces.forEach { face ->
         drawQuad(face.corners, face.color)
     }
@@ -158,51 +310,38 @@ private fun generateCubieFaces(
     val half = size / 2f
     val p = position
 
-    // Define 8 corners in local space
     val corners3D = listOf(
-        Vector3(p.x - half, p.y - half, p.z + half), // 0: front-bottom-left
-        Vector3(p.x + half, p.y - half, p.z + half), // 1: front-bottom-right
-        Vector3(p.x + half, p.y + half, p.z + half), // 2: front-top-right
-        Vector3(p.x - half, p.y + half, p.z + half), // 3: front-top-left
-        Vector3(p.x - half, p.y - half, p.z - half), // 4: back-bottom-left
-        Vector3(p.x + half, p.y - half, p.z - half), // 5: back-bottom-right
-        Vector3(p.x + half, p.y + half, p.z - half), // 6: back-top-right
-        Vector3(p.x - half, p.y + half, p.z - half)  // 7: back-top-left
+        Vector3(p.x - half, p.y - half, p.z + half),
+        Vector3(p.x + half, p.y - half, p.z + half),
+        Vector3(p.x + half, p.y + half, p.z + half),
+        Vector3(p.x - half, p.y + half, p.z + half),
+        Vector3(p.x - half, p.y - half, p.z - half),
+        Vector3(p.x + half, p.y - half, p.z - half),
+        Vector3(p.x + half, p.y + half, p.z - half),
+        Vector3(p.x - half, p.y + half, p.z - half)
     )
 
-    // Apply rotations
-    val rotated = corners3D.map { corner ->
-        corner.rotateX(rotationX).rotateY(rotationY)
-    }
+    val rotated = corners3D.map { it.rotateX(rotationX).rotateY(rotationY) }
+    val projected = rotated.map { Offset(centerX + it.x, centerY - it.y) }
 
-    // Project to 2D
-    val projected = rotated.map { point ->
-        Offset(centerX + point.x, centerY - point.y)
-    }
-
-    // Define 6 faces with correct winding order
     val faceData = listOf(
-        FaceData(listOf(0, 1, 2, 3), colors.front),  // Front (z+)
-        FaceData(listOf(5, 4, 7, 6), colors.back),   // Back (z-)
-        FaceData(listOf(3, 2, 6, 7), colors.top),    // Top (y+)
-        FaceData(listOf(1, 0, 4, 5), colors.bottom), // Bottom (y-)
-        FaceData(listOf(4, 0, 3, 7), colors.left),   // Left (x-)
-        FaceData(listOf(1, 5, 6, 2), colors.right)   // Right (x+)
+        FaceData(listOf(0, 1, 2, 3), colors.front),
+        FaceData(listOf(5, 4, 7, 6), colors.back),
+        FaceData(listOf(3, 2, 6, 7), colors.top),
+        FaceData(listOf(1, 0, 4, 5), colors.bottom),
+        FaceData(listOf(4, 0, 3, 7), colors.left),
+        FaceData(listOf(1, 5, 6, 2), colors.right)
     )
 
     val result = mutableListOf<DrawableFace>()
 
     faceData.forEach { face ->
         if (face.color != null) {
-            // Get rotated 3D positions for this face
             val face3D = face.indices.map { rotated[it] }
-
-            // Calculate if face is visible using cross product
             val v0 = face3D[0]
             val v1 = face3D[1]
             val v2 = face3D[2]
 
-            // Two edges of the face
             val edge1X = v1.x - v0.x
             val edge1Y = v1.y - v0.y
             val edge1Z = v1.z - v0.z
@@ -211,30 +350,13 @@ private fun generateCubieFaces(
             val edge2Y = v2.y - v0.y
             val edge2Z = v2.z - v0.z
 
-            // Cross product gives normal
-            val normalX = edge1Y * edge2Z - edge1Z * edge2Y
-            val normalY = edge1Z * edge2X - edge1X * edge2Z
             val normalZ = edge1X * edge2Y - edge1Y * edge2X
 
-            // View direction (simplified: looking down -Z axis)
-            // A face is visible if its normal has a positive Z component
-            // Use relaxed threshold to ensure faces don't disappear
-            val isVisible = normalZ > -50f
-
-            if (isVisible) {
-                // Calculate average depth for sorting
+            if (normalZ > -50f) {
                 val avgDepth = (face3D[0].z + face3D[1].z + face3D[2].z + face3D[3].z) / 4f
-
-                // Get 2D projected corners
                 val projectedCorners = face.indices.map { projected[it] }
 
-                result.add(
-                    DrawableFace(
-                        corners = projectedCorners,
-                        color = face.color,
-                        depth = avgDepth
-                    )
-                )
+                result.add(DrawableFace(projectedCorners, face.color, avgDepth))
             }
         }
     }
@@ -242,10 +364,7 @@ private fun generateCubieFaces(
     return result
 }
 
-private fun DrawScope.drawQuad(
-    corners: List<Offset>,
-    color: Color
-) {
+private fun DrawScope.drawQuad(corners: List<Offset>, color: Color) {
     val path = Path().apply {
         moveTo(corners[0].x, corners[0].y)
         lineTo(corners[1].x, corners[1].y)
@@ -253,11 +372,7 @@ private fun DrawScope.drawQuad(
         lineTo(corners[3].x, corners[3].y)
         close()
     }
-
-    // Fill the face
     drawPath(path = path, color = color, style = Fill)
-
-    // Draw black outline
     drawPath(path = path, color = Color.Black, style = Stroke(width = 3f))
 }
 
@@ -277,7 +392,7 @@ private fun getColorFromInt(colorInt: Int): Color {
         0 -> Color.White
         1 -> Color.Red
         2 -> Color.Blue
-        3 -> Color(0xFFFFA500) // Orange
+        3 -> Color(0xFFFFA500)
         4 -> Color.Green
         5 -> Color.Yellow
         else -> Color.Gray
@@ -319,47 +434,27 @@ private fun createSolvedCube(): Cube {
     )
 }
 
-// Data classes
 private data class Vector3(val x: Float, val y: Float, val z: Float) {
     fun rotateX(angleDegrees: Float): Vector3 {
         val rad = Math.toRadians(angleDegrees.toDouble())
         val cos = cos(rad).toFloat()
         val sin = sin(rad).toFloat()
-        return Vector3(
-            x = x,
-            y = y * cos - z * sin,
-            z = y * sin + z * cos
-        )
+        return Vector3(x, y * cos - z * sin, y * sin + z * cos)
     }
 
     fun rotateY(angleDegrees: Float): Vector3 {
         val rad = Math.toRadians(angleDegrees.toDouble())
         val cos = cos(rad).toFloat()
         val sin = sin(rad).toFloat()
-        return Vector3(
-            x = x * cos + z * sin,
-            y = y,
-            z = -x * sin + z * cos
-        )
+        return Vector3(x * cos + z * sin, y, -x * sin + z * cos)
     }
 }
 
 private data class CubieColors(
-    val front: Color?,
-    val back: Color?,
-    val top: Color?,
-    val bottom: Color?,
-    val left: Color?,
-    val right: Color?
+    val front: Color?, val back: Color?, val top: Color?,
+    val bottom: Color?, val left: Color?, val right: Color?
 )
 
-private data class FaceData(
-    val indices: List<Int>,
-    val color: Color?
-)
+private data class FaceData(val indices: List<Int>, val color: Color?)
 
-private data class DrawableFace(
-    val corners: List<Offset>,
-    val color: Color,
-    val depth: Float
-)
+private data class DrawableFace(val corners: List<Offset>, val color: Color, val depth: Float)
