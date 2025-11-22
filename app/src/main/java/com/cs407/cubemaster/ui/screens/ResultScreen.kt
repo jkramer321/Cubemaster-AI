@@ -53,7 +53,7 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
     val gradientBrush = Brush.verticalGradient(colors = listOf(LightOrange, DarkOrange))
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    var showAnalysis by remember { mutableStateOf(false) }
+    var showAnalysis by remember { mutableStateOf(true) }  // Changed to true - default to CUBE
 
     if (showDialog) {
         AlertDialog(

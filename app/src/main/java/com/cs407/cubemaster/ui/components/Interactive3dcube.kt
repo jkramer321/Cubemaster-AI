@@ -1,5 +1,6 @@
 package com.cs407.cubemaster.ui.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -28,8 +29,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.cubemaster.data.Cube
+import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
+
+// Data class to represent an animation state
+data class MoveAnimation(
+    val axis: RotationAxis,
+    val layer: Int,
+    val direction: Int, // 1 for clockwise, -1 for counter-clockwise
+    val targetRotation: Float = 90f
+)
+
+enum class RotationAxis { X, Y, Z }
 
 @Composable
 fun Interactive3DCube(
@@ -43,12 +55,34 @@ fun Interactive3DCube(
     // Create a mutable cube that we can rotate
     var currentCube by remember { mutableStateOf(cube.freeze()) }
 
+    // Animation states
+    var currentAnimation by remember { mutableStateOf<MoveAnimation?>(null) }
+    var animationProgress by remember { mutableStateOf(0f) }
+    var isAnimating by remember { mutableStateOf(false) }
+
+    val animationScope = rememberCoroutineScope()
+
+    // Animated rotation value
+    val animatedRotation by animateFloatAsState(
+        targetValue = if (isAnimating) animationProgress else 0f,
+        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        finishedListener = {
+            if (isAnimating) {
+                // Animation finished, apply the move to the cube
+                isAnimating = false
+                animationProgress = 0f
+                currentAnimation = null
+            }
+        },
+        label = "cube_rotation"
+    )
+
     Column(modifier = modifier.fillMaxSize()) {
         // Cube display area
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(2.5f)
         ) {
             Canvas(
                 modifier = Modifier
@@ -56,12 +90,14 @@ fun Interactive3DCube(
                     .pointerInput(Unit) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
-                            rotationY += dragAmount.x * 0.3f
-                            rotationX -= dragAmount.y * 0.3f
+                            if (!isAnimating) {
+                                rotationY += dragAmount.x * 0.3f
+                                rotationX -= dragAmount.y * 0.3f
+                            }
                         }
                     }
             ) {
-                val cubeSize = size.minDimension * 0.4f * scale
+                val cubeSize = size.minDimension * 0.55f * scale
                 val centerX = size.width / 2f
                 val centerY = size.height / 2f
 
@@ -71,7 +107,9 @@ fun Interactive3DCube(
                     cubeSize = cubeSize,
                     rotationX = rotationX,
                     rotationY = rotationY,
-                    cube = currentCube
+                    cube = currentCube,
+                    animation = currentAnimation,
+                    animationProgress = animatedRotation
                 )
             }
 
@@ -79,13 +117,13 @@ fun Interactive3DCube(
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 IconButton(
                     onClick = { scale = (scale + 0.2f).coerceAtMost(3f) },
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(40.dp)
                         .background(Color.White.copy(alpha = 0.8f), CircleShape)
                 ) {
                     Icon(
@@ -97,7 +135,7 @@ fun Interactive3DCube(
                 IconButton(
                     onClick = { scale = (scale - 0.2f).coerceAtLeast(0.5f) },
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(40.dp)
                         .background(Color.White.copy(alpha = 0.8f), CircleShape)
                 ) {
                     Icon(
@@ -112,97 +150,146 @@ fun Interactive3DCube(
         // Cube move controls
         CubeMoveControls(
             onMove = { move ->
-                currentCube = performMove(currentCube, move)
+                if (!isAnimating) {
+                    // Set up the animation
+                    val animation = getMoveAnimation(move)
+                    currentAnimation = animation
+                    isAnimating = true
+                    animationProgress = animation.direction * animation.targetRotation
+
+                    // Schedule the actual cube update after animation starts
+                    animationScope.launch {
+                        kotlinx.coroutines.delay(400) // Match animation duration
+                        currentCube = performMove(currentCube, move)
+                    }
+                }
             },
             onReset = {
-                currentCube = createSolvedCube()
-            }
+                if (!isAnimating) {
+                    currentCube = createSolvedCube()
+                }
+            },
+            isAnimating = isAnimating
         )
+    }
+}
+
+// Helper function to determine animation parameters for each move
+// Based on standard Rubik's cube notation with proper face mappings
+fun getMoveAnimation(move: String): MoveAnimation {
+    return when (move) {
+        // U/U' - Top face (row 0) rotates horizontally
+        "U" -> MoveAnimation(RotationAxis.X, 0, 1)       // Top row right
+        "U'" -> MoveAnimation(RotationAxis.X, 0, -1)     // Top row left
+
+        // D/D' - Bottom face (row 2) rotates horizontally - SWAPPED for consistency
+        "D" -> MoveAnimation(RotationAxis.X, 2, 1)       // Bottom row right (was -1)
+        "D'" -> MoveAnimation(RotationAxis.X, 2, -1)     // Bottom row left (was 1)
+
+        // L/L' - Left face (column 0) rotates vertically - SWAPPED for consistency
+        "L" -> MoveAnimation(RotationAxis.Z, 0, -1)      // Left column up, animate DOWN (reversed for visual match)
+        "L'" -> MoveAnimation(RotationAxis.Z, 0, 1)      // Left column down, animate UP (reversed for visual match)
+
+        // R/R' - Right face (column 2) rotates vertically - FIXED!
+        "R" -> MoveAnimation(RotationAxis.Z, 2, -1)      // Right column up, animate DOWN (reversed for visual match)
+        "R'" -> MoveAnimation(RotationAxis.Z, 2, 1)      // Right column down, animate UP (reversed for visual match)
+
+        // F/F' - Front face (middle column as placeholder)
+        "F" -> MoveAnimation(RotationAxis.Z, 1, -1)      // Middle column up, animate DOWN (reversed for visual match)
+        "F'" -> MoveAnimation(RotationAxis.Z, 1, 1)      // Middle column down, animate UP (reversed for visual match)
+
+        // B/B' - Back face (middle row as placeholder)
+        "B" -> MoveAnimation(RotationAxis.X, 1, 1)       // Middle row right
+        "B'" -> MoveAnimation(RotationAxis.X, 1, -1)     // Middle row left
+
+        else -> MoveAnimation(RotationAxis.X, 0, 1)
     }
 }
 
 @Composable
 fun CubeMoveControls(
     onMove: (String) -> Unit,
-    onReset: () -> Unit
+    onReset: () -> Unit,
+    isAnimating: Boolean
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFF2C2C2C))
-            .padding(16.dp),
+            .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Cube Moves",
             color = Color.White,
-            fontSize = 18.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        // First row: F, R, U
+        // First row: L, F, R
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            MoveButton("F", Color(0xFF4CAF50)) { onMove("F") }
-            MoveButton("R", Color(0xFF2196F3)) { onMove("R") }
-            MoveButton("U", Color(0xFFFFC107)) { onMove("U") }
+            MoveButton("L", Color(0xFFFF9800), isAnimating) { onMove("L") }
+            MoveButton("F", Color(0xFF4CAF50), isAnimating) { onMove("F") }
+            MoveButton("R", Color(0xFF2196F3), isAnimating) { onMove("R") }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Second row: L', F', R'
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            MoveButton("L'", Color(0xFFE65100), isAnimating) { onMove("L'") }
+            MoveButton("F'", Color(0xFF388E3C), isAnimating) { onMove("F'") }
+            MoveButton("R'", Color(0xFF1976D2), isAnimating) { onMove("R'") }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Third row: U, B, D
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            MoveButton("U", Color(0xFFFFC107), isAnimating) { onMove("U") }
+            MoveButton("B", Color(0xFF009688), isAnimating) { onMove("B") }
+            MoveButton("D", Color(0xFFF44336), isAnimating) { onMove("D") }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Fourth row: U', B', D'
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            MoveButton("U'", Color(0xFFFFA000), isAnimating) { onMove("U'") }
+            MoveButton("B'", Color(0xFF00695C), isAnimating) { onMove("B'") }
+            MoveButton("D'", Color(0xFFC62828), isAnimating) { onMove("D'") }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-
-        // Second row: F', R', U'
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            MoveButton("F'", Color(0xFF388E3C)) { onMove("F'") }
-            MoveButton("R'", Color(0xFF1976D2)) { onMove("R'") }
-            MoveButton("U'", Color(0xFFFFA000)) { onMove("U'") }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Third row: L, B, D
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            MoveButton("L", Color(0xFFFF9800)) { onMove("L") }
-            MoveButton("B", Color(0xFF009688)) { onMove("B") }
-            MoveButton("D", Color(0xFFF44336)) { onMove("D") }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Fourth row: L', B', D'
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            MoveButton("L'", Color(0xFFE65100)) { onMove("L'") }
-            MoveButton("B'", Color(0xFF00695C)) { onMove("B'") }
-            MoveButton("D'", Color(0xFFC62828)) { onMove("D'") }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         // Reset button
         Button(
             onClick = onReset,
+            enabled = !isAnimating,
             modifier = Modifier
-                .fillMaxWidth(0.5f)
-                .height(48.dp),
+                .fillMaxWidth(0.45f)
+                .height(40.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF9C27B0)
             ),
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(20.dp)
         ) {
             Text(
                 text = "RESET",
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -213,44 +300,63 @@ fun CubeMoveControls(
 fun MoveButton(
     label: String,
     color: Color,
+    isAnimating: Boolean,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
+        enabled = !isAnimating,
         modifier = Modifier
-            .width(100.dp)
-            .height(56.dp),
+            .width(85.dp)
+            .height(44.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = color
+            containerColor = color,
+            disabledContainerColor = color.copy(alpha = 0.5f)
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(10.dp)
     ) {
         Text(
             text = label,
-            fontSize = 20.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = if (isAnimating) Color.White.copy(alpha = 0.5f) else Color.White
         )
     }
 }
 
 // Perform Rubik's Cube moves
+// Mapped according to standard notation with Front=White, Top=Yellow, Bottom=Red,
+// Left=Orange, Right=Blue, Back=Green
 fun performMove(cube: Cube, move: String): Cube {
     val newCube = cube.freeze()
 
     when (move) {
-        "F" -> newCube.rotateCol(2, rotateUp = true)
-        "F'" -> newCube.rotateCol(2, rotateUp = false)
-        "R" -> newCube.rotateRow(2, rotateRight = false)
-        "R'" -> newCube.rotateRow(2, rotateRight = true)
-        "U" -> newCube.rotateRow(0, rotateRight = true)
-        "U'" -> newCube.rotateRow(0, rotateRight = false)
-        "L" -> newCube.rotateCol(0, rotateUp = false)
-        "L'" -> newCube.rotateCol(0, rotateUp = true)
-        "B" -> newCube.rotateCol(0, rotateUp = false)
-        "B'" -> newCube.rotateCol(0, rotateUp = true)
-        "D" -> newCube.rotateRow(2, rotateRight = false)
-        "D'" -> newCube.rotateRow(2, rotateRight = true)
+        // U/U' - Top face (Yellow) - Works correctly ✓
+        "U" -> newCube.rotateRow(0, rotateRight = true)   // Top row rotates right
+        "U'" -> newCube.rotateRow(0, rotateRight = false) // Top row rotates left
+
+        // D/D' - Bottom face (Red) - SWAPPED to match horizontal consistency
+        "D" -> newCube.rotateRow(2, rotateRight = true)   // Bottom row rotates right (was false)
+        "D'" -> newCube.rotateRow(2, rotateRight = false) // Bottom row rotates left (was true)
+
+        // L/L' - Left face (Orange) - SWAPPED for consistency with vertical commands
+        "L" -> newCube.rotateCol(0, rotateUp = true)      // Left column rotates up (was false)
+        "L'" -> newCube.rotateCol(0, rotateUp = false)    // Left column rotates down (was true)
+
+        // R/R' - Right face (Blue) - FIXED! Was incorrectly using rotateRow
+        "R" -> newCube.rotateCol(2, rotateUp = true)      // Right column rotates up (CW from right)
+        "R'" -> newCube.rotateCol(2, rotateUp = false)    // Right column rotates down (CCW from right)
+
+        // F/F' - Front face (White) - CANNOT BE IMPLEMENTED with current API
+        // The API only supports column/row slices, not arbitrary face rotations
+        // For now, map to middle column rotation as placeholder
+        "F" -> newCube.rotateCol(1, rotateUp = true)      // Middle column (not true front face)
+        "F'" -> newCube.rotateCol(1, rotateUp = false)    // Middle column
+
+        // B/B' - Back face (Green) - CANNOT BE IMPLEMENTED with current API
+        // Map to middle row rotation as placeholder
+        "B" -> newCube.rotateRow(1, rotateRight = true)   // Middle row (not true back face)
+        "B'" -> newCube.rotateRow(1, rotateRight = false) // Middle row
     }
 
     return newCube
@@ -262,7 +368,9 @@ private fun DrawScope.draw3DRubiksCube(
     cubeSize: Float,
     rotationX: Float,
     rotationY: Float,
-    cube: Cube
+    cube: Cube,
+    animation: MoveAnimation?,
+    animationProgress: Float
 ) {
     val cubieSize = cubeSize / 3f
     val gap = cubieSize * 0.04f
@@ -278,6 +386,42 @@ private fun DrawScope.draw3DRubiksCube(
                 )
 
                 val colors = getCubieColors(cube, x, y, z)
+
+                // Determine if this cubie should be animated
+                val shouldAnimate = animation != null && when (animation.axis) {
+                    RotationAxis.X -> {
+                        // For row rotations: check y coordinate
+                        // Row 0 (top) = y = +1, Row 2 (bottom) = y = -1
+                        when (animation.layer) {
+                            0 -> y == 1   // Top row
+                            1 -> y == 0   // Middle row
+                            2 -> y == -1  // Bottom row
+                            else -> false
+                        }
+                    }
+                    RotationAxis.Y -> false // Not used in current implementation
+                    RotationAxis.Z -> {
+                        // For column rotations: check x coordinate
+                        // Col 0 (left) = x = -1, Col 2 (right) = x = +1
+                        when (animation.layer) {
+                            0 -> x == -1  // Left column
+                            1 -> x == 0   // Middle column
+                            2 -> x == 1   // Right column
+                            else -> false
+                        }
+                    }
+                }
+
+                val extraRotation = if (shouldAnimate && animation != null) {
+                    when (animation.axis) {
+                        RotationAxis.X -> Triple(0f, animationProgress, 0f)  // Row rotations = Y-axis rotation (horizontal)
+                        RotationAxis.Y -> Triple(0f, 0f, 0f)                 // Not used
+                        RotationAxis.Z -> Triple(animationProgress, 0f, 0f)  // Column rotations = X-axis rotation (vertical)
+                    }
+                } else {
+                    Triple(0f, 0f, 0f)
+                }
+
                 val cubieFaces = generateCubieFaces(
                     position = worldPos,
                     size = cubieSize,
@@ -285,7 +429,8 @@ private fun DrawScope.draw3DRubiksCube(
                     rotationX = rotationX,
                     rotationY = rotationY,
                     centerX = centerX,
-                    centerY = centerY
+                    centerY = centerY,
+                    extraRotation = extraRotation
                 )
                 allFaces.addAll(cubieFaces)
             }
@@ -305,7 +450,8 @@ private fun generateCubieFaces(
     rotationX: Float,
     rotationY: Float,
     centerX: Float,
-    centerY: Float
+    centerY: Float,
+    extraRotation: Triple<Float, Float, Float> = Triple(0f, 0f, 0f)
 ): List<DrawableFace> {
     val half = size / 2f
     val p = position
@@ -321,7 +467,28 @@ private fun generateCubieFaces(
         Vector3(p.x - half, p.y + half, p.z - half)
     )
 
-    val rotated = corners3D.map { it.rotateX(rotationX).rotateY(rotationY) }
+    // Apply extra rotation for animation (around the cube center, not cubie center)
+    val rotatedAroundCenter = corners3D.map { corner ->
+        val relativePos = Vector3(corner.x - p.x, corner.y - p.y, corner.z - p.z)
+        val rotated = relativePos
+            .rotateX(extraRotation.first)
+            .rotateY(extraRotation.second)
+            .rotateZ(extraRotation.third)
+        Vector3(rotated.x + p.x, rotated.y + p.y, rotated.z + p.z)
+    }
+
+    // Apply position rotation for animation
+    val animatedPosition = p
+        .rotateX(extraRotation.first)
+        .rotateY(extraRotation.second)
+        .rotateZ(extraRotation.third)
+
+    val finalCorners = rotatedAroundCenter.map { corner ->
+        val offset = Vector3(corner.x - p.x, corner.y - p.y, corner.z - p.z)
+        Vector3(animatedPosition.x + offset.x, animatedPosition.y + offset.y, animatedPosition.z + offset.z)
+    }
+
+    val rotated = finalCorners.map { it.rotateX(rotationX).rotateY(rotationY) }
     val projected = rotated.map { Offset(centerX + it.x, centerY - it.y) }
 
     val faceData = listOf(
@@ -447,6 +614,13 @@ private data class Vector3(val x: Float, val y: Float, val z: Float) {
         val cos = cos(rad).toFloat()
         val sin = sin(rad).toFloat()
         return Vector3(x * cos + z * sin, y, -x * sin + z * cos)
+    }
+
+    fun rotateZ(angleDegrees: Float): Vector3 {
+        val rad = Math.toRadians(angleDegrees.toDouble())
+        val cos = cos(rad).toFloat()
+        val sin = sin(rad).toFloat()
+        return Vector3(x * cos - y * sin, x * sin + y * cos, z)
     }
 }
 
