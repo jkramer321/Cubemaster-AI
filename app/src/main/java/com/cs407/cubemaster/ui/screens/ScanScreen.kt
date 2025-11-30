@@ -2,7 +2,6 @@ package com.cs407.cubemaster.ui.screens
 
 import android.Manifest
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageProxy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
@@ -75,7 +73,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     var scanSession by remember { mutableStateOf(ScanSession()) }
     var frameCaptureCallback by remember { mutableStateOf<FrameCaptureCallback?>(null) }
     // DEBUG: RGB color values extracted from camera frame - uncomment assignments/usage to enable RGB debug display
-    var previewRgbColors by remember { mutableStateOf<Array<Array<com.cs407.cubemaster.ml.ColorGrouper.RGBColor>>?>(null) }
+    // var previewRgbColors by remember { mutableStateOf<Array<Array<com.cs407.cubemaster.ml.ColorGrouper.RGBColor>>?>(null) }
     var previewColors by remember { mutableStateOf<Array<IntArray>?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -83,8 +81,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     // Track camera preview container size for accurate grid mapping
     var previewContainerWidth by remember { mutableFloatStateOf(0f) }
     var previewContainerHeight by remember { mutableFloatStateOf(0f) }
-    val density = LocalDensity.current
-    
+
     // Services
     val frameCaptureService = remember { FrameCaptureService() }
     val colorClassifier = remember { ColorClassifier() }
