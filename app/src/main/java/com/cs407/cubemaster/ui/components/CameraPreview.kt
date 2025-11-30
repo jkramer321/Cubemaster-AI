@@ -48,16 +48,30 @@ fun CameraPreview(
         }
     }
 
-    // Store latest frame for capture
+    // Pending frame request callback - when set, the next frame from analyzer will be delivered here
+    val pendingFrameRequest = remember { AtomicReference<((ImageProxy?) -> Unit)?>(null) }
+    
+    // Fallback: store latest frame in case request comes before analyzer is running
     val latestFrameRef = remember { AtomicReference<ImageProxy?>(null) }
+    
     var imageAnalysis by remember { mutableStateOf<ImageAnalysis?>(null) }
 
-    // Create frame capture callback
+    // Create frame capture callback that waits for a FRESH frame
     val frameCaptureCallback = remember {
         object : FrameCaptureCallback {
             override fun onFrameRequested(callback: (ImageProxy?) -> Unit) {
-                val frame = latestFrameRef.getAndSet(null)
-                callback(frame)
+                // Clear any stale frame
+                latestFrameRef.getAndSet(null)?.close()
+                
+                // Set the pending request - the analyzer will fulfill it with the NEXT frame
+                val previousRequest = pendingFrameRequest.getAndSet(callback)
+                if (previousRequest != null) {
+                    // There was already a pending request (shouldn't happen, but handle it)
+                    Log.w("CameraPreview", "Overwriting pending frame request")
+                    previousRequest(null)
+                }
+                
+                Log.d("CameraPreview", "Frame requested - waiting for fresh frame from analyzer")
             }
         }
     }
@@ -86,9 +100,18 @@ fun CameraPreview(
                     .build()
                     .also {
                         it.setAnalyzer(executor) { imageProxy ->
-                            // Store latest frame (don't close, we'll handle it)
-                            val previousFrame = latestFrameRef.getAndSet(imageProxy)
-                            previousFrame?.close()
+                            // Check if there's a pending frame request
+                            val pendingCallback = pendingFrameRequest.getAndSet(null)
+                            if (pendingCallback != null) {
+                                // Fulfill the pending request with this fresh frame
+                                Log.d("CameraPreview", "Delivering fresh frame to pending request")
+                                pendingCallback(imageProxy)
+                                // Don't close - the caller will handle it
+                            } else {
+                                // No pending request - store as latest (and close previous)
+                                val previousFrame = latestFrameRef.getAndSet(imageProxy)
+                                previousFrame?.close()
+                            }
                         }
                     }
                 
@@ -119,6 +142,8 @@ fun CameraPreview(
             cameraProvider.unbindAll()
             // Close any remaining frame
             latestFrameRef.get()?.close()
+            // Cancel any pending request
+            pendingFrameRequest.getAndSet(null)?.invoke(null)
             imageAnalysis?.clearAnalyzer()
         }
     }

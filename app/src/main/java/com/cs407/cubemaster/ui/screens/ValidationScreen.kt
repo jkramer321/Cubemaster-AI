@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.R
+import com.cs407.cubemaster.data.CubeHolder
+import com.cs407.cubemaster.ui.components.Interactive3DCube
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
@@ -57,7 +59,10 @@ fun ValidationScreen(modifier: Modifier = Modifier, navController: NavController
                     .padding(32.dp)
                     .border(4.dp, LightOrange, RoundedCornerShape(16.dp))
             ) {
-                // This is the top half for the camera view
+                // Display the scanned cube
+                CubeHolder.scannedCube?.let { cube ->
+                    Interactive3DCube(cube = cube)
+                }
             }
             Box(
                 modifier = Modifier

@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.R
+import com.cs407.cubemaster.data.CubeHolder
 import com.cs407.cubemaster.ml.ColorClassifier
 import com.cs407.cubemaster.ml.FaceMapper
 import com.cs407.cubemaster.ml.FrameCaptureService
@@ -112,29 +113,20 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     val onScanClick: () -> Unit = {
         if (!isProcessing && previewContainerWidth > 0 && previewContainerHeight > 0) {
             isProcessing = true
-            
-            // Capture current dimensions (they might change during async processing)
             val capturedWidth = previewContainerWidth
             val capturedHeight = previewContainerHeight
             
-            android.util.Log.d("ScanScreen", 
-                "Scan requested with preview container size: ${capturedWidth}x${capturedHeight}")
-            
             frameCaptureCallback?.onFrameRequested { imageProxy ->
                 if (imageProxy != null) {
-                    // Process frame in background
                     coroutineScope.launch(Dispatchers.IO) {
                         try {
-                            // Pass container dimensions for accurate grid mapping
                             val rgbGrid = frameCaptureService.extractGridColors(
-                                imageProxy,
-                                capturedWidth,
-                                capturedHeight
+                                imageProxy, capturedWidth, capturedHeight
                             )
                             if (rgbGrid != null) {
                                 val colorCodes = colorClassifier.classifyGrid(rgbGrid)
                                 withContext(Dispatchers.Main) {
-                                    previewRgbColors = rgbGrid  // Store RGB for debug
+                                    previewRgbColors = rgbGrid
                                     previewColors = colorCodes
                                     scanSession = scanSession.showPreview()
                                     isProcessing = false
@@ -157,9 +149,6 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                     isProcessing = false
                 }
             }
-        } else if (previewContainerWidth <= 0 || previewContainerHeight <= 0) {
-            android.util.Log.w("ScanScreen", 
-                "Cannot scan: preview container size not yet measured (${previewContainerWidth}x${previewContainerHeight})")
         }
     }
 
@@ -185,7 +174,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
             
             // If complete, navigate to validation
             if (scanSession.isComplete()) {
-                // TODO: Pass cube to validation screen
+                CubeHolder.scannedCube = scanSession.buildCube()
                 navController.navigate("validation")
             }
         }
@@ -219,8 +208,6 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                     .onGloballyPositioned { coordinates ->
                         previewContainerWidth = coordinates.size.width.toFloat()
                         previewContainerHeight = coordinates.size.height.toFloat()
-                        android.util.Log.d("ScanScreen", 
-                            "Preview container measured: ${previewContainerWidth}x${previewContainerHeight} px")
                     }
             ) {
                 if (cameraPermissionState.status.isGranted) {
