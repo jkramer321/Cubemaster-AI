@@ -74,6 +74,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
     var scanSession by remember { mutableStateOf(ScanSession()) }
     var frameCaptureCallback by remember { mutableStateOf<FrameCaptureCallback?>(null) }
+    // DEBUG: RGB color values extracted from camera frame - uncomment assignments/usage to enable RGB debug display
     var previewRgbColors by remember { mutableStateOf<Array<Array<com.cs407.cubemaster.ml.ColorGrouper.RGBColor>>?>(null) }
     var previewColors by remember { mutableStateOf<Array<IntArray>?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
@@ -120,13 +121,16 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                 if (imageProxy != null) {
                     coroutineScope.launch(Dispatchers.IO) {
                         try {
+                            // DEBUG: Extract RGB color values from the frame for debugging purposes
+                            // To print RGB values, uncomment: android.util.Log.d("ScanScreen", "RGB Grid: ${rgbGrid.contentDeepToString()}")
                             val rgbGrid = frameCaptureService.extractGridColors(
                                 imageProxy, capturedWidth, capturedHeight
                             )
                             if (rgbGrid != null) {
                                 val colorCodes = colorClassifier.classifyGrid(rgbGrid)
                                 withContext(Dispatchers.Main) {
-                                    previewRgbColors = rgbGrid
+                                    // DEBUG: Store RGB colors for potential debugging (currently not displayed in UI)
+                                    // previewRgbColors = rgbGrid
                                     previewColors = colorCodes
                                     scanSession = scanSession.showPreview()
                                     isProcessing = false
@@ -166,7 +170,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
             val updatedSession = scanSession.addScannedFace(currentFace.cubeSide, colorsArray)
             scanSession = updatedSession.moveToNextFace()
             previewColors = null
-            previewRgbColors = null
+            // DEBUG: previewRgbColors = null
             
             // Clear the frame capture callback - the new CameraPreview will provide a fresh one
             // This prevents using a stale callback from the previous CameraPreview instance
@@ -183,7 +187,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     // Handle rescan button click
     val onRescanClick: () -> Unit = {
         previewColors = null
-        previewRgbColors = null
+        // DEBUG: previewRgbColors = null
         isProcessing = false
         scanSession = scanSession.rescanCurrentFace()
     }
@@ -233,19 +237,19 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                             )
                         }
                     } else if (scanSession.currentState == ScanState.PREVIEW_FACE && previewColors != null) {
-                        // Show preview grid with debug info
+                        // Show preview grid with classified colors
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (previewRgbColors != null) {
-                                DebugColorPreviewGrid(
-                                    rgbColors = previewRgbColors!!,
-                                    classifiedColors = previewColors!!
-                                )
-                            } else {
-                                ColorPreviewGrid(colors = previewColors!!)
-                            }
+                            ColorPreviewGrid(colors = previewColors!!)
+                            // DEBUG: Uncomment below to show RGB debug grid instead of simple color preview
+                            // if (previewRgbColors != null) {
+                            //     DebugColorPreviewGrid(
+                            //         rgbColors = previewRgbColors!!,
+                            //         classifiedColors = previewColors!!
+                            //     )
+                            // }
                         }
                     }
 
