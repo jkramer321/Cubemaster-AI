@@ -38,7 +38,9 @@ import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.R
+import com.cs407.cubemaster.data.CubeHolder
 import com.cs407.cubemaster.ui.components.Interactive3DCube
+import com.cs407.cubemaster.ui.components.createSolvedCube
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
@@ -82,7 +84,8 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
             contentAlignment = Alignment.Center
         ) {
             if (showAnalysis) {
-                Interactive3DCube()
+                // Use scanned cube if available, otherwise show solved cube
+                Interactive3DCube(cube = CubeHolder.scannedCube ?: createSolvedCube())
             } else {
                 BoxWithConstraints {
                     val boxWidth = this.maxWidth

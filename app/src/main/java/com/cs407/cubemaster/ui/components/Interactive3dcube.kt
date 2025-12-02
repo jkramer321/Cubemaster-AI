@@ -566,7 +566,7 @@ private fun getColorFromInt(colorInt: Int): Color {
     }
 }
 
-private fun createSolvedCube(): Cube {
+internal fun createSolvedCube(): Cube {
     return Cube(
         s1 = mutableListOf(
             mutableListOf(0, 0, 0),

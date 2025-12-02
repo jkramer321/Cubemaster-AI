@@ -64,8 +64,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.fragment:fragment-ktx:1.6.0")
 
-    // CameraX dependencies
-    val camerax_version = "1.3.0"
+    // CameraX dependencies - Updated to 1.4.0 for 16KB page size compatibility
+    val camerax_version = "1.4.0"
     implementation("androidx.camera:camera-core:$camerax_version")
     implementation("androidx.camera:camera-camera2:$camerax_version")
     implementation("androidx.camera:camera-lifecycle:$camerax_version")
