@@ -39,6 +39,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.cubemaster.R
 import com.cs407.cubemaster.data.CubeHolder
+import com.cs407.cubemaster.solver.KociembaSolver
 import com.cs407.cubemaster.ui.components.Interactive3DCube
 import com.cs407.cubemaster.ui.components.createSolvedCube
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
@@ -47,6 +48,7 @@ import com.cs407.cubemaster.ui.theme.LightOrange
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.widget.Toast
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
@@ -56,6 +58,39 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var showAnalysis by remember { mutableStateOf(true) }  // Changed to true - default to CUBE
+
+    // Solver state
+    val solver = remember { KociembaSolver() }
+    var solutionSteps by remember { mutableStateOf<List<String>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+
+    // Initialize solver and compute solution when screen loads
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                isLoading = true
+                solver.initialize()
+
+                val cube = CubeHolder.scannedCube
+                if (cube != null && !cube.isSolved()) {
+                    val solution = solver.solve(cube)
+                    if (solution != null) {
+                        solutionSteps = solution
+                    } else {
+                        errorMessage = context.getString(R.string.error_no_solution)
+                    }
+                } else if (cube?.isSolved() == true) {
+                    solutionSteps = listOf(context.getString(R.string.cube_already_solved))
+                }
+            } catch (e: Exception) {
+                errorMessage = context.getString(R.string.error_solving_cube)
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 
     if (showDialog) {
         AlertDialog(
@@ -87,32 +122,60 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                 // Use scanned cube if available, otherwise show solved cube
                 Interactive3DCube(cube = CubeHolder.scannedCube ?: createSolvedCube())
             } else {
-                BoxWithConstraints {
-                    val boxWidth = this.maxWidth
-                    var currentStep by remember { mutableStateOf(1) }
-                    val steps = (1..10).map { stringResource(R.string.step_template, it) }
+                // Steps view
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator(color = Color.White)
+                    }
+                    errorMessage != null -> {
+                        Text(
+                            text = errorMessage!!,
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    solutionSteps.isEmpty() -> {
+                        Text(
+                            text = stringResource(R.string.no_solution_available),
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    else -> {
+                        BoxWithConstraints {
+                            val boxWidth = this.maxWidth
+                            var currentStep by remember { mutableStateOf(1) }
+                            val steps = solutionSteps
 
-                    AnimatedContent(
-                        targetState = currentStep,
-                        transitionSpec = {
-                            if (targetState > initialState) {
-                                slideInVertically(animationSpec = tween(600)) { -it } togetherWith slideOutVertically(animationSpec = tween(600)) { it }
-                            } else {
-                                slideInVertically(animationSpec = tween(600)) { it } togetherWith slideOutVertically(animationSpec = tween(600)) { -it }
-                            }
-                        },
-                        label = "step"
-                    ) { targetStep ->
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
-                        ) {
-                            if (targetStep < steps.size) {
-                                StepCard(targetStep + 1, false, steps[targetStep], { currentStep++ })
-                            }
-                            StepCard(targetStep, true, steps[targetStep - 1], {}, boxWidth)
-                            if (targetStep > 1) {
-                                StepCard(targetStep - 1, false, steps[targetStep - 2], { currentStep-- })
+                            AnimatedContent(
+                                targetState = currentStep,
+                                transitionSpec = {
+                                    if (targetState > initialState) {
+                                        slideInVertically(animationSpec = tween(600)) { -it } togetherWith slideOutVertically(animationSpec = tween(600)) { it }
+                                    } else {
+                                        slideInVertically(animationSpec = tween(600)) { it } togetherWith slideOutVertically(animationSpec = tween(600)) { -it }
+                                    }
+                                },
+                                label = "step"
+                            ) { targetStep ->
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
+                                ) {
+                                    if (targetStep < steps.size) {
+                                        StepCard(targetStep + 1, false, steps[targetStep], { currentStep++ })
+                                    }
+                                    StepCard(targetStep, true, steps[targetStep - 1], {}, boxWidth)
+                                    if (targetStep > 1) {
+                                        StepCard(targetStep - 1, false, steps[targetStep - 2], { currentStep-- })
+                                    }
+                                }
                             }
                         }
                     }
