@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,9 +26,11 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cs407.cubemaster.R
 import com.cs407.cubemaster.data.Cube
 import kotlinx.coroutines.launch
 import kotlin.math.cos
@@ -128,7 +131,7 @@ fun Interactive3DCube(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Zoom In",
+                        contentDescription = stringResource(R.string.cd_zoom_in),
                         tint = Color.Black
                     )
                 }
@@ -140,7 +143,7 @@ fun Interactive3DCube(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Remove,
-                        contentDescription = "Zoom Out",
+                        contentDescription = stringResource(R.string.cd_zoom_out),
                         tint = Color.Black
                     )
                 }
@@ -215,12 +218,12 @@ fun CubeMoveControls(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF2C2C2C))
+            .background(MaterialTheme.colorScheme.primary)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Cube Moves",
+            text = stringResource(R.string.cube_moves_label),
             color = Color.White,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
@@ -236,7 +239,6 @@ fun CubeMoveControls(
             MoveButton("F", Color(0xFF4CAF50), isAnimating) { onMove("F") }
             MoveButton("R", Color(0xFF2196F3), isAnimating) { onMove("R") }
         }
-
         Spacer(modifier = Modifier.height(4.dp))
 
         // Second row: L', F', R'
@@ -282,13 +284,10 @@ fun CubeMoveControls(
             modifier = Modifier
                 .fillMaxWidth(0.45f)
                 .height(40.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF9C27B0)
-            ),
             shape = RoundedCornerShape(20.dp)
         ) {
             Text(
-                text = "RESET",
+                text = stringResource(R.string.button_reset_caps),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )

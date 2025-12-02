@@ -7,4 +7,3 @@ package com.cs407.cubemaster.data
 object CubeHolder {
     var scannedCube: Cube? = null
 }
-
