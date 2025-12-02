@@ -74,18 +74,32 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                 solver.initialize()
 
                 val cube = CubeHolder.scannedCube
-                if (cube != null && !cube.isSolved()) {
+                if (cube != null) {
+                    // Validate cube first
+                    val validationResult = com.cs407.cubemaster.solver.CubeValidator.validate(cube)
+                    if (!validationResult.isValid) {
+                        errorMessage = com.cs407.cubemaster.solver.CubeValidator.getErrorMessage(validationResult)
+                        isLoading = false
+                        return@launch
+                    }
+
+                    // Check if already solved
+                    if (cube.isSolved()) {
+                        solutionSteps = listOf(context.getString(R.string.cube_already_solved))
+                        isLoading = false
+                        return@launch
+                    }
+
+                    // Solve the cube
                     val solution = solver.solve(cube)
                     if (solution != null) {
                         solutionSteps = solution
                     } else {
                         errorMessage = context.getString(R.string.error_no_solution)
                     }
-                } else if (cube?.isSolved() == true) {
-                    solutionSteps = listOf(context.getString(R.string.cube_already_solved))
                 }
             } catch (e: Exception) {
-                errorMessage = context.getString(R.string.error_solving_cube)
+                errorMessage = "${context.getString(R.string.error_solving_cube)}: ${e.message}"
             } finally {
                 isLoading = false
             }

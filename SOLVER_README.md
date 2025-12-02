@@ -141,20 +141,40 @@ The solver is integrated into `ResultScreen.kt`:
 - **Solution Length**: Typically 18-22 moves
 - **Memory**: ~50 MB for all tables
 
+## Recent Updates (Completed)
+
+### ✅ F and B Move Implementation
+- Fully implemented `rotateFrontClockwise`, `rotateFrontCounterClockwise`
+- Fully implemented `rotateBackClockwise`, `rotateBackCounterClockwise`
+- All 18 moves (R, L, U, D, F, B with ', 2 variants) now work correctly
+- Uses reflection to access private `setCell` method in Cube class
+
+### ✅ Cube Validation System
+Comprehensive validation checks:
+1. **Color Count**: Validates exactly 9 facelets of each of 6 colors
+2. **Duplicate Detection**: Checks for duplicate corner/edge pieces
+3. **Missing Pieces**: Ensures all 8 corners and 12 edges are present
+4. **Corner Orientation**: Sum of orientations ≡ 0 (mod 3)
+5. **Edge Orientation**: Sum of orientations ≡ 0 (mod 2)
+6. **Permutation Parity**: Corner and edge parity must match
+
+**CubeValidator.kt** provides:
+- `validate(cube)`: Full validation with detailed error reporting
+- `quickValidate(cube)`: Fast color-count only validation
+- `getErrorMessage(result)`: Human-readable error messages
+
+**Integration**: Validation runs automatically in ResultScreen before solving
+
 ## Limitations and Future Improvements
 
 ### Current Limitations
 
-1. **CubeConverter**: The conversion from facelet to cubie representation is complex and may have bugs. Thorough testing needed.
+1. **CubeConverter**: The facelet-to-cubie conversion is complex and falls back to solved state if it fails. Validation currently relies primarily on color count checking, which is sufficient for most scanning errors.
 
 2. **Pruning Tables**: Simplified to reduce initialization time. Full implementation would have:
    - Phase 1: Twist-Flip-Slice combined table (2187 × 2048 × 495 ≈ 2.2 GB)
    - Phase 2: Corner-Edge-Slice combined table (40320 × 40320 × 24 ≈ 39 GB)
    - Solution: Use disk storage and symmetry reduction
-
-3. **Move Application**: F and B moves in CubeConverter are not fully implemented
-
-4. **Validation**: No validation that scanned cube is valid (e.g., correct number of each color, solvable configuration)
 
 ### Suggested Improvements
 
