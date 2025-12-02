@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -215,7 +216,7 @@ fun CubeMoveControls(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF2C2C2C))
+            .background(MaterialTheme.colorScheme.primary)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -236,7 +237,6 @@ fun CubeMoveControls(
             MoveButton("F", Color(0xFF4CAF50), isAnimating) { onMove("F") }
             MoveButton("R", Color(0xFF2196F3), isAnimating) { onMove("R") }
         }
-
         Spacer(modifier = Modifier.height(4.dp))
 
         // Second row: L', F', R'
@@ -282,9 +282,6 @@ fun CubeMoveControls(
             modifier = Modifier
                 .fillMaxWidth(0.45f)
                 .height(40.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF9C27B0)
-            ),
             shape = RoundedCornerShape(20.dp)
         ) {
             Text(

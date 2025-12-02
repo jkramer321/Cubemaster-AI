@@ -163,7 +163,7 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
 @Composable
 fun ModernBottomNavBar(navController: NavController, currentScreen: String, onNavigate: (String) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().height(80.dp).background(Color(0xFF2C2C2C))
+        modifier = Modifier.fillMaxWidth().height(80.dp).background(MaterialTheme.colorScheme.primary)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
