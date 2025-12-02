@@ -1,7 +1,8 @@
 package com.cs407.cubemaster.data
 
 /**
- * Singleton object to hold the scanned cube state across screens
+ * Simple holder for the scanned cube during navigation flow
+ * This is the simplest approach - no serialization needed
  */
 object CubeHolder {
     var scannedCube: Cube? = null
