@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -107,7 +108,7 @@ fun ProfileScreen(navController: NavController) {
                             if (selectedImageUri != null) {
                                 AsyncImage(
                                     model = selectedImageUri,
-                                    contentDescription = "Selected Profile Picture",
+                                    contentDescription = stringResource(R.string.cd_profile_picture),
                                     modifier = Modifier.fillMaxSize().clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
@@ -115,7 +116,7 @@ fun ProfileScreen(navController: NavController) {
                                 // Use a default image if no image is selected
                                 Image(
                                     painter = painterResource(id = R.drawable.rubik_icon),
-                                    contentDescription = "Default Profile Picture",
+                                    contentDescription = stringResource(R.string.cd_default_profile),
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
@@ -126,14 +127,15 @@ fun ProfileScreen(navController: NavController) {
 
                         // Name and Quote
                         Column {
-                            val userNameState = remember { mutableStateOf(prefs.getString("user_name", "Your Name") ?: "Your Name") }
+                            val defaultName = stringResource(R.string.default_user_name)
+                            val userNameState = remember { mutableStateOf(prefs.getString("user_name", defaultName) ?: defaultName) }
                             OutlinedTextField(
                                 value = userNameState.value,
                                 onValueChange = { newValue ->
                                     userNameState.value = newValue
                                     prefs.edit().putString("user_name", newValue).apply()
                                 },
-                                label = { Text("Your Name") },
+                                label = { Text(stringResource(R.string.profile_name_label)) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -141,10 +143,10 @@ fun ProfileScreen(navController: NavController) {
 
                             // Dropdown for Favorite Quote
                             val allQuotes = listOf(
-                                "Quote 1" to "The only way to do great work is to love what you do.",
-                                "Quote 2" to "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-                                "Quote 3" to "The best way to predict the future is to create it.",
-                                "Quote 4" to "Hard work beats talent when talent doesn't work hard."
+                                "Quote 1" to stringResource(R.string.quote_1),
+                                "Quote 2" to stringResource(R.string.quote_2),
+                                "Quote 3" to stringResource(R.string.quote_3),
+                                "Quote 4" to stringResource(R.string.quote_4)
                             )
                             // For now, assume all are unlocked.
                             val unlockedQuotes = allQuotes
@@ -161,12 +163,12 @@ fun ProfileScreen(navController: NavController) {
                                     value = allQuotes.firstOrNull { it.second == selectedQuoteState.value }?.first ?: "", // Display short label
                                     onValueChange = {}, // Read-only
                                     readOnly = true,
-                                    label = { Text("Favorite Quote") },
+                                    label = { Text(stringResource(R.string.profile_quote_label)) },
                                     trailingIcon = {
                                         IconButton(onClick = { expanded = !expanded }) {
                                             Icon(
                                                 imageVector = if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
-                                                contentDescription = "Dropdown Arrow"
+                                                contentDescription = stringResource(R.string.cd_dropdown_arrow)
                                             )
                                         }
                                     },
@@ -207,7 +209,7 @@ fun ProfileScreen(navController: NavController) {
                         contentAlignment = Alignment.Center // Center the text
                     ) {
                         Text(
-                            text = "Achievements",
+                            text = stringResource(R.string.profile_achievements),
                             color = Color.White, // Ensure text is visible on dark background
                             style = MaterialTheme.typography.headlineSmall
                         )
@@ -223,7 +225,7 @@ fun ProfileScreen(navController: NavController) {
                 .fillMaxWidth() // Fill width so it doesn't look weird when content above fills width
                 .padding(16.dp)
         ) {
-            Text("Back")
+            Text(stringResource(R.string.button_back))
         }
     }
 }

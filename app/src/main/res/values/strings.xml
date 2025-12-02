@@ -53,4 +53,59 @@
     <!-- Error Messages -->
     <string name="error_copying_file">Error copying file</string>
     <string name="error_no_pdf_viewer">No PDF viewer found</string>
+    <string name="error_failed_scrambles">Failed to load scrambles</string>
+    <string name="error_no_image">No image captured</string>
+    <string name="error_generic">Error</string>
+
+    <!-- Profile Screen -->
+    <string name="cd_profile_picture">Selected Profile Picture</string>
+    <string name="cd_default_profile">Default Profile Picture</string>
+    <string name="default_user_name">Your Name</string>
+    <string name="profile_name_label">Your Name</string>
+    <string name="profile_quote_label">Favorite Quote</string>
+    <string name="cd_dropdown_arrow">Dropdown Arrow</string>
+    <string name="profile_achievements">Achievements</string>
+    <string name="quote_1">The only way to do great work is to love what you do.</string>
+    <string name="quote_2">Success is not final, failure is not fatal: it is the courage to continue that counts.</string>
+    <string name="quote_3">The best way to predict the future is to create it.</string>
+    <string name="quote_4">Hard work beats talent when talent doesn\'t work hard.</string>
+
+    <!-- Timer Screen -->
+    <string name="timer_loading_scramble">Loading Scramble…</string>
+    <string name="timer_reset_title">Reset Timer</string>
+    <string name="timer_reset_message">Are you sure you want to reset the timer?</string>
+    <string name="timer_delete_title">Delete Time</string>
+    <string name="timer_delete_message">Are you sure you want to delete this time?</string>
+    <string name="timer_save_title">Save Time</string>
+    <string name="timer_save_message">Are you sure you want to save this time?</string>
+    <string name="timer_saved_full_title">Saved Times Full</string>
+    <string name="timer_saved_full_message">Remove one to save current time.</string>
+    <string name="timer_back_title">Are you sure you want to go back?</string>
+    <string name="timer_back_message">Any unsaved times will be lost.</string>
+    <string name="button_ok">OK</string>
+    <string name="button_new_scramble">New Scramble</string>
+    <string name="timer_scramble_label">Scramble</string>
+    <string name="button_stop">Stop</string>
+    <string name="button_reset">Reset</string>
+    <string name="button_save">Save</string>
+    <string name="timer_stats_best">Best</string>
+    <string name="timer_stats_worst">Worst</string>
+    <string name="timer_stats_average">Average</string>
+    <string name="timer_stats_average_3_of_5">Average 3 of 5</string>
+    <string name="timer_saved_times">Saved Times</string>
+    <string name="cd_remove_time">Remove Time</string>
+
+    <!-- Scan Screen -->
+    <string name="scan_capturing">Capturing cube…</string>
+
+    <!-- Result Screen -->
+    <string name="nav_timer">Timer</string>
+    <string name="nav_cube">Cube</string>
+    <string name="cd_cube">Cube</string>
+
+    <!-- Interactive 3D Cube -->
+    <string name="cd_zoom_in">Zoom In</string>
+    <string name="cd_zoom_out">Zoom Out</string>
+    <string name="cube_moves_label">Cube Moves</string>
+    <string name="button_reset_caps">RESET</string>
 </resources>

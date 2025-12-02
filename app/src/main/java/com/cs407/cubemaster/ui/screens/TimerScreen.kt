@@ -44,7 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
+import com.cs407.cubemaster.R
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
 import kotlinx.coroutines.delay
@@ -75,7 +77,9 @@ fun TimerScreen(navController: NavController) {
 
     val context = LocalContext.current
     val scrambles = remember { mutableStateOf<List<String>>(emptyList()) }
-    var currentScramble by remember { mutableStateOf("Loading Scramble...") }
+    val loadingText = stringResource(R.string.timer_loading_scramble)
+    val errorText = stringResource(R.string.error_failed_scrambles)
+    var currentScramble by remember { mutableStateOf(loadingText) }
 
     LaunchedEffect(Unit) {
         try {
@@ -84,7 +88,7 @@ fun TimerScreen(navController: NavController) {
             scrambles.value = reader.readLines()
             currentScramble = scrambles.value.random()
         } catch (e: Exception) {
-            currentScramble = "Failed to load scrambles"
+            currentScramble = errorText
         }
     }
 
@@ -92,8 +96,8 @@ fun TimerScreen(navController: NavController) {
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("Reset Timer") },
-            text = { Text("Are you sure you want to reset the timer?") },
+            title = { Text(stringResource(R.string.timer_reset_title)) },
+            text = { Text(stringResource(R.string.timer_reset_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -105,12 +109,12 @@ fun TimerScreen(navController: NavController) {
                         showResetDialog = false
                     }
                 ) {
-                    Text("Yes")
+                    Text(stringResource(R.string.button_yes))
                 }
             },
             dismissButton = {
                 Button(onClick = { showResetDialog = false }) {
-                    Text("No")
+                    Text(stringResource(R.string.button_no))
                 }
             }
         )
@@ -119,8 +123,8 @@ fun TimerScreen(navController: NavController) {
     if (showDeleteConfirmationDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmationDialog = false },
-            title = { Text("Delete Time") },
-            text = { Text("Are you sure you want to delete this time?") },
+            title = { Text(stringResource(R.string.timer_delete_title)) },
+            text = { Text(stringResource(R.string.timer_delete_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -145,7 +149,7 @@ fun TimerScreen(navController: NavController) {
                         timeToDelete = null
                     }
                 ) {
-                    Text("Yes")
+                    Text(stringResource(R.string.button_yes))
                 }
             },
             dismissButton = {
@@ -153,7 +157,7 @@ fun TimerScreen(navController: NavController) {
                     showDeleteConfirmationDialog = false
                     timeToDelete = null
                 }) {
-                    Text("No")
+                    Text(stringResource(R.string.button_no))
                 }
             }
         )
@@ -162,8 +166,8 @@ fun TimerScreen(navController: NavController) {
     if (showSaveDialog) {
         AlertDialog(
             onDismissRequest = { showSaveDialog = false },
-            title = { Text("Save Time") },
-            text = { Text("Are you sure you want to save this time?") },
+            title = { Text(stringResource(R.string.timer_save_title)) },
+            text = { Text(stringResource(R.string.timer_save_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -184,12 +188,12 @@ fun TimerScreen(navController: NavController) {
                         showSaveDialog = false
                     }
                 ) {
-                    Text("Yes")
+                    Text(stringResource(R.string.button_yes))
                 }
             },
             dismissButton = {
                 Button(onClick = { showSaveDialog = false }) {
-                    Text("No")
+                    Text(stringResource(R.string.button_no))
                 }
             }
         )
@@ -198,11 +202,11 @@ fun TimerScreen(navController: NavController) {
     if (showTimesFullDialog) {
         AlertDialog(
             onDismissRequest = { showTimesFullDialog = false },
-            title = { Text("Saved Times Full") },
-            text = { Text("Remove one to save current time.") },
+            title = { Text(stringResource(R.string.timer_saved_full_title)) },
+            text = { Text(stringResource(R.string.timer_saved_full_message)) },
             confirmButton = {
                 Button(onClick = { showTimesFullDialog = false }) {
-                    Text("OK")
+                    Text(stringResource(R.string.button_ok))
                 }
             }
         )
@@ -211,19 +215,19 @@ fun TimerScreen(navController: NavController) {
     if (showBackDialog) {
         AlertDialog(
             onDismissRequest = { showBackDialog = false },
-            title = { Text("Are you sure you want to go back?") },
-            text = { Text("Any unsaved times will be lost.") },
+            title = { Text(stringResource(R.string.timer_back_title)) },
+            text = { Text(stringResource(R.string.timer_back_message)) },
             confirmButton = {
                 Button(onClick = {
                     navController.popBackStack()
                     showBackDialog = false
                 }) {
-                    Text("Yes")
+                    Text(stringResource(R.string.button_yes))
                 }
             },
             dismissButton = {
                 Button(onClick = { showBackDialog = false }) {
-                    Text("No")
+                    Text(stringResource(R.string.button_no))
                 }
             }
         )
@@ -253,11 +257,11 @@ fun TimerScreen(navController: NavController) {
                     currentScramble = scrambles.value.random()
                 }
             }) {
-                Text(text = "New Scramble")
+                Text(text = stringResource(R.string.button_new_scramble))
             }
             Spacer(modifier = Modifier.height(16.dp)) // Add some space between the button and "Scramble"
             Text(
-                text = "Scramble",
+                text = stringResource(R.string.timer_scramble_label),
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
@@ -296,7 +300,7 @@ fun TimerScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(onClick = { isActive = !isActive }) {
-                    Text(text = if (isActive) "Stop" else "Start")
+                    Text(text = if (isActive) stringResource(R.string.button_stop) else stringResource(R.string.button_start))
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -304,7 +308,7 @@ fun TimerScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Button(onClick = { showResetDialog = true }) {
-                    Text(text = "Reset")
+                    Text(text = stringResource(R.string.button_reset))
                 }
                 Button(onClick = {
                     if (savedTimes.value.size >= 5) {
@@ -313,7 +317,7 @@ fun TimerScreen(navController: NavController) {
                         showSaveDialog = true
                     }
                 }) {
-                    Text(text = "Save")
+                    Text(text = stringResource(R.string.button_save))
                 }
             }
         }
@@ -332,23 +336,23 @@ fun TimerScreen(navController: NavController) {
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Best", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.timer_stats_best), color = Color.White, fontWeight = FontWeight.Bold)
                     Text(formatTime(bestTime), color = Color.White)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Worst", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.timer_stats_worst), color = Color.White, fontWeight = FontWeight.Bold)
                     Text(formatTime(worstTime), color = Color.White)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Average", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.timer_stats_average), color = Color.White, fontWeight = FontWeight.Bold)
                     Text(formatTime(averageTime), color = Color.White)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Average 3 of 5", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.timer_stats_average_3_of_5), color = Color.White, fontWeight = FontWeight.Bold)
                     Text(formatTime(average3of5), color = Color.White)
                 }
                 Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Saved Times", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.timer_saved_times), color = Color.White, fontWeight = FontWeight.Bold)
                     LazyColumn {
                         items(savedTimes.value, key = { it }) { time ->
                             AnimatedVisibility(
@@ -364,7 +368,7 @@ fun TimerScreen(navController: NavController) {
                                     }) {
                                         Icon(
                                             imageVector = Icons.Default.Close,
-                                            contentDescription = "Remove Time",
+                                            contentDescription = stringResource(R.string.cd_remove_time),
                                             tint = Color.White
                                         )
                                     }
@@ -382,7 +386,7 @@ fun TimerScreen(navController: NavController) {
                 .align(Alignment.BottomStart)
                 .padding(32.dp) // Adjusted padding
         ) {
-            Text(text = "Back")
+            Text(text = stringResource(R.string.button_back))
         }
     }
 }

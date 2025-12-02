@@ -140,7 +140,7 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                                 }
                             } catch (e: Exception) {
                                 e.printStackTrace()
-                                Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
                             }
                         }
                         val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
@@ -151,7 +151,7 @@ fun ResultScreen(modifier: Modifier = Modifier, navController: NavController) {
                         try {
                             context.startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
-                            Toast.makeText(context, "No PDF viewer", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, context.getString(R.string.error_no_pdf_viewer), Toast.LENGTH_LONG).show()
                         }
                     }
                 }
@@ -168,11 +168,11 @@ fun ModernBottomNavBar(navController: NavController, currentScreen: String, onNa
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        NavBarItem(Icons.Default.Home, "Home", false) { onNavigate("home") }
-        NavBarItem(Icons.Default.Timer, "Timer", false) { onNavigate("timer") }
+        NavBarItem(Icons.Default.Home, stringResource(R.string.nav_home), false) { onNavigate("home") }
+        NavBarItem(Icons.Default.Timer, stringResource(R.string.nav_timer), false) { onNavigate("timer") }
         CubeNavBarItem(currentScreen == "cube") { onNavigate("cube") }
-        NavBarItem(Icons.Default.Person, "Profile", false) { onNavigate("profile") }
-        NavBarItem(Icons.Default.School, "Guide", false) { onNavigate("guide") }
+        NavBarItem(Icons.Default.Person, stringResource(R.string.nav_profile), false) { onNavigate("profile") }
+        NavBarItem(Icons.Default.School, stringResource(R.string.nav_guide), false) { onNavigate("guide") }
     }
 }
 
@@ -215,11 +215,11 @@ fun CubeNavBarItem(isSelected: Boolean, onClick: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Default.Category,
-                contentDescription = "Cube",
+                contentDescription = stringResource(R.string.cd_cube),
                 tint = Color.White,
                 modifier = Modifier.size(32.dp)
             )
-            Text(text = "CUBE", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(text = stringResource(R.string.nav_cube), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

@@ -26,9 +26,11 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cs407.cubemaster.R
 import com.cs407.cubemaster.data.Cube
 import kotlinx.coroutines.launch
 import kotlin.math.cos
@@ -129,7 +131,7 @@ fun Interactive3DCube(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Zoom In",
+                        contentDescription = stringResource(R.string.cd_zoom_in),
                         tint = Color.Black
                     )
                 }
@@ -141,7 +143,7 @@ fun Interactive3DCube(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Remove,
-                        contentDescription = "Zoom Out",
+                        contentDescription = stringResource(R.string.cd_zoom_out),
                         tint = Color.Black
                     )
                 }
@@ -221,7 +223,7 @@ fun CubeMoveControls(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Cube Moves",
+            text = stringResource(R.string.cube_moves_label),
             color = Color.White,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
@@ -285,7 +287,7 @@ fun CubeMoveControls(
             shape = RoundedCornerShape(20.dp)
         ) {
             Text(
-                text = "RESET",
+                text = stringResource(R.string.button_reset_caps),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
