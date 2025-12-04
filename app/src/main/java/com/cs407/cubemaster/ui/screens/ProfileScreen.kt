@@ -170,25 +170,24 @@ fun ProfileScreen(navController: NavController) {
                             Spacer(modifier = Modifier.height(16.dp)) // Increased spacer height
 
                             // Dropdown for Favorite Quote
-                            val allQuotes = listOf(
-                                "Quote 1" to stringResource(R.string.quote_1),
-                                "Quote 2" to stringResource(R.string.quote_2),
-                                "Quote 3" to stringResource(R.string.quote_3),
-                                "Quote 4" to stringResource(R.string.quote_4)
-                            )
-                            // For now, assume all are unlocked.
-                            val unlockedQuotes = allQuotes
+                            val unlockedQuotes = achievements.filter { it.unlocked }.map { it.name to it.name }
 
                             var expanded by remember { mutableStateOf(false) }
-                            val selectedQuoteState = remember { mutableStateOf(prefs.getString("selected_quote", allQuotes.firstOrNull()?.second ?: "") ?: "") }
+                            val selectedQuoteState = remember { mutableStateOf(prefs.getString("selected_quote", "") ?: "") }
+
+                            // If the currently selected quote is from an achievement that is now locked, reset it.
+                            if (selectedQuoteState.value.isNotEmpty() && unlockedQuotes.none { it.second == selectedQuoteState.value }) {
+                                selectedQuoteState.value = ""
+                                prefs.edit().putString("selected_quote", "").apply()
+                            }
 
                             ExposedDropdownMenuBox(
                                 expanded = expanded,
                                 onExpandedChange = { expanded = !expanded },
-                                modifier = Modifier.wrapContentWidth() // Made smaller
+                                modifier = Modifier.wrapContentWidth()
                             ) {
                                 TextField(
-                                    value = allQuotes.firstOrNull { it.second == selectedQuoteState.value }?.first ?: "", // Display short label
+                                    value = selectedQuoteState.value,
                                     onValueChange = {}, // Read-only
                                     readOnly = true,
                                     label = { Text(stringResource(R.string.profile_quote_label)) },
@@ -200,24 +199,30 @@ fun ProfileScreen(navController: NavController) {
                                             )
                                         }
                                     },
-                                    modifier = Modifier
-                                        .menuAnchor()
-                                        // Removed .fillMaxWidth() to allow wrapContentWidth() to take effect
+                                    modifier = Modifier.menuAnchor()
                                 )
 
                                 ExposedDropdownMenu(
                                     expanded = expanded,
                                     onDismissRequest = { expanded = false }
                                 ) {
-                                    unlockedQuotes.forEach { (label, fullQuote) ->
+                                    if (unlockedQuotes.isEmpty()) {
                                         DropdownMenuItem(
-                                            text = { Text(label) }, // Display the short label
-                                            onClick = {
-                                                selectedQuoteState.value = fullQuote // Update state with the full quote
-                                                prefs.edit().putString("selected_quote", fullQuote).apply() // Save full quote
-                                                expanded = false
-                                            }
+                                            text = { Text("No achievements unlocked") },
+                                            onClick = { expanded = false },
+                                            enabled = false
                                         )
+                                    } else {
+                                        unlockedQuotes.forEach { (label, quoteValue) ->
+                                            DropdownMenuItem(
+                                                text = { Text(label) },
+                                                onClick = {
+                                                    selectedQuoteState.value = quoteValue
+                                                    prefs.edit().putString("selected_quote", quoteValue).apply()
+                                                    expanded = false
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
