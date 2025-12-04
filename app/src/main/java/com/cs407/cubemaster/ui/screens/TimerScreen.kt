@@ -56,6 +56,22 @@ import java.io.InputStreamReader
 
 @Composable
 fun TimerScreen(navController: NavController) {
+    val (achievementsToShow, setAchievementsToShow) = remember { mutableStateOf(emptyList<String>()) }
+
+    if (achievementsToShow.isNotEmpty()) {
+        val achievementName = achievementsToShow.first()
+        AlertDialog(
+            onDismissRequest = { setAchievementsToShow(achievementsToShow.drop(1)) },
+            title = { Text("Achievement Unlocked!") },
+            text = { Text("You've unlocked the \"$achievementName\" achievement!") },
+            confirmButton = {
+                Button(onClick = { setAchievementsToShow(achievementsToShow.drop(1)) }) {
+                    Text("Awesome!")
+                }
+            }
+        )
+    }
+
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
             LightOrange,
@@ -186,14 +202,26 @@ fun TimerScreen(navController: NavController) {
                             savedTimes.value = newTimes
                             prefs.edit().putStringSet("saved_times", newTimes.map { it.toString() }.toSet()).apply()
 
+                            var newAchievements = emptyList<String>()
+
                             // Achievement: SpeedSolver
-                            if (timeMillis <= 60000) { // 60 seconds
+                            val wasSpeedSolverUnlocked = prefs.getBoolean("speed_solver_unlocked", false)
+                            if (timeMillis <= 60000 && !wasSpeedSolverUnlocked) { // 60 seconds
                                 prefs.edit().putBoolean("speed_solver_unlocked", true).apply()
+                                newAchievements = newAchievements + "SpeedSolver"
                             }
 
                             if (newTimes.size == 5) {
                                 // Achievement: World Record?
-                                prefs.edit().putBoolean("average_viewer_unlocked", true).apply()
+                                val wasAverageViewerUnlocked = prefs.getBoolean("average_viewer_unlocked", false)
+                                if (!wasAverageViewerUnlocked) {
+                                    prefs.edit().putBoolean("average_viewer_unlocked", true).apply()
+                                    newAchievements = newAchievements + "World Record?"
+                                }
+                            }
+                            
+                            if (newAchievements.isNotEmpty()) {
+                                setAchievementsToShow(achievementsToShow + newAchievements)
                             }
                         }
                         showSaveDialog = false
@@ -269,8 +297,10 @@ fun TimerScreen(navController: NavController) {
                 }
                 val scrambleCount = prefs.getInt("scramble_count", 0) + 1
                 prefs.edit().putInt("scramble_count", scrambleCount).apply()
-                if (scrambleCount >= 20) {
+                val wasScrambleMasterUnlocked = prefs.getBoolean("scramble_master_unlocked", false)
+                if (scrambleCount >= 20 && !wasScrambleMasterUnlocked) {
                     prefs.edit().putBoolean("scramble_master_unlocked", true).apply()
+                    setAchievementsToShow(achievementsToShow + "SCRAMBLE, ScRaMbLe, scramble")
                 }
             }) {
                 Text(text = stringResource(R.string.button_new_scramble))
