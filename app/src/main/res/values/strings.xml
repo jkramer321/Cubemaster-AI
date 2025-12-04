@@ -108,4 +108,10 @@
     <string name="cd_zoom_out">Zoom Out</string>
     <string name="cube_moves_label">Cube Moves</string>
     <string name="button_reset_caps">RESET</string>
+
+    <!-- Solver Messages -->
+    <string name="error_no_solution">Could not find a solution for this cube</string>
+    <string name="error_solving_cube">An error occurred while solving the cube</string>
+    <string name="no_solution_available">No solution available</string>
+    <string name="cube_already_solved">Cube is already solved!</string>
 </resources>
