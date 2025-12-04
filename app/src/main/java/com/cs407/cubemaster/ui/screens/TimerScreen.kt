@@ -62,11 +62,11 @@ fun TimerScreen(navController: NavController) {
         val achievementName = achievementsToShow.first()
         AlertDialog(
             onDismissRequest = { setAchievementsToShow(achievementsToShow.drop(1)) },
-            title = { Text("Achievement Unlocked!") },
-            text = { Text("You've unlocked the \"$achievementName\" achievement!") },
+            title = { Text(stringResource(R.string.achievement_unlocked_title)) },
+            text = { Text(stringResource(R.string.achievement_unlocked_message, achievementName)) },
             confirmButton = {
                 Button(onClick = { setAchievementsToShow(achievementsToShow.drop(1)) }) {
-                    Text("Awesome!")
+                    Text(stringResource(R.string.button_awesome))
                 }
             }
         )
@@ -300,7 +300,7 @@ fun TimerScreen(navController: NavController) {
                 val wasScrambleMasterUnlocked = prefs.getBoolean("scramble_master_unlocked", false)
                 if (scrambleCount >= 20 && !wasScrambleMasterUnlocked) {
                     prefs.edit().putBoolean("scramble_master_unlocked", true).apply()
-                    setAchievementsToShow(achievementsToShow + "SCRAMBLE, ScRaMbLe, scramble")
+                    setAchievementsToShow(achievementsToShow + context.getString(R.string.achievement_scramble_master))
                 }
             }) {
                 Text(text = stringResource(R.string.button_new_scramble))

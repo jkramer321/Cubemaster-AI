@@ -21,6 +21,17 @@
     <string name="requesting_permission">Requesting camera permission...</string>
     <string name="scan_instruction">Please keep a single side\nfacing the camera</string>
     <string name="cd_flip_camera">Flip Camera</string>
+    <string name="scan_ready_message">Ready to scan</string>
+    <string name="button_start_scanning">Start Scanning</string>
+    <string name="scan_scanning_face">Scanning %1$s (%2$s)</string>
+    <string name="scan_processing">Processing...</string>
+    <string name="button_scan">Scan</string>
+    <string name="scan_preview_face">Preview %1$s (%2$s)</string>
+    <string name="button_rescan">Rescan</string>
+    <string name="button_confirm">Confirm</string>
+    <string name="scan_complete_message">All faces scanned!</string>
+    <string name="button_continue">Continue</string>
+    <string name="scan_face_fallback">Face</string>
 
     <!-- Navigation Buttons -->
     <string name="button_back">Back</string>
@@ -69,6 +80,15 @@
     <string name="quote_2">Success is not final, failure is not fatal: it is the courage to continue that counts.</string>
     <string name="quote_3">The best way to predict the future is to create it.</string>
     <string name="quote_4">Hard work beats talent when talent doesn\'t work hard.</string>
+    <string name="achievement_no_unlocked_message">No achievements unlocked</string>
+    <string name="achievement_unlocked_state">Achievement Unlocked</string>
+    <string name="achievement_locked_state">Locked Achievement</string>
+    <string name="achievement_speed_solver">SpeedSolver</string>
+    <string name="achievement_speed_solver_desc">Solve a Rubik\'s cube in a minute or faster</string>
+    <string name="achievement_scramble_master">SCRAMBLE, ScRaMbLe, scramble</string>
+    <string name="achievement_scramble_master_desc">Scramble the cube 20 times</string>
+    <string name="achievement_world_record">World Record?</string>
+    <string name="achievement_world_record_desc">See your average score after 5 saved solves</string>
 
     <!-- Timer Screen -->
     <string name="timer_loading_scramble">Loading Scramble…</string>
@@ -94,6 +114,9 @@
     <string name="timer_stats_average_3_of_5">Average 3 of 5</string>
     <string name="timer_saved_times">Saved Times</string>
     <string name="cd_remove_time">Remove Time</string>
+    <string name="achievement_unlocked_title">Achievement Unlocked!</string>
+    <string name="achievement_unlocked_message">You\'ve unlocked the \"%1$s\" achievement!</string>
+    <string name="button_awesome">Awesome!</string>
 
     <!-- Scan Screen -->
     <string name="scan_capturing">Capturing cube…</string>
