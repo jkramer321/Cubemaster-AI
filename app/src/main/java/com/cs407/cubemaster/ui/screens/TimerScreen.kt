@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.cs407.cubemaster.R
@@ -55,6 +56,22 @@ import java.io.InputStreamReader
 
 @Composable
 fun TimerScreen(navController: NavController) {
+    val (achievementsToShow, setAchievementsToShow) = remember { mutableStateOf(emptyList<String>()) }
+
+    if (achievementsToShow.isNotEmpty()) {
+        val achievementName = achievementsToShow.first()
+        AlertDialog(
+            onDismissRequest = { setAchievementsToShow(achievementsToShow.drop(1)) },
+            title = { Text("Achievement Unlocked!") },
+            text = { Text("You've unlocked the \"$achievementName\" achievement!") },
+            confirmButton = {
+                Button(onClick = { setAchievementsToShow(achievementsToShow.drop(1)) }) {
+                    Text("Awesome!")
+                }
+            }
+        )
+    }
+
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
             LightOrange,
@@ -67,15 +84,35 @@ fun TimerScreen(navController: NavController) {
     var showSaveDialog by remember { mutableStateOf(false) }
     var showTimesFullDialog by remember { mutableStateOf(false) }
     var showBackDialog by remember { mutableStateOf(false) }
-    val savedTimes = remember { mutableStateOf(listOf<Long>()) }
-    var bestTime by remember { mutableStateOf(0L) }
-    var worstTime by remember { mutableStateOf(0L) }
-    var averageTime by remember { mutableStateOf(0L) }
-    var average3of5 by remember { mutableStateOf(0L) }
     var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
     var timeToDelete by remember { mutableStateOf<Long?>(null) }
 
     val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("profile_prefs", Context.MODE_PRIVATE) }
+
+    val savedTimes = remember {
+        val savedTimesSet = prefs.getStringSet("saved_times", null)
+        mutableStateOf(savedTimesSet?.map { it.toLong() }?.toList() ?: emptyList<Long>())
+    }
+
+    var bestTime by remember { mutableStateOf(0L) }
+    var worstTime by remember { mutableStateOf(0L) }
+    var averageTime by remember { mutableStateOf(0L) }
+    var average3of5 by remember { mutableStateOf(0L) }
+
+    // This effect runs whenever savedTimes.value changes to update the stats
+    LaunchedEffect(savedTimes.value) {
+        val times = savedTimes.value
+        bestTime = times.minOrNull() ?: 0L
+        worstTime = times.maxOrNull() ?: 0L
+        averageTime = if (times.isNotEmpty()) times.average().toLong() else 0L
+        average3of5 = if (times.size == 5) {
+            times.sorted().subList(1, 4).average().toLong()
+        } else {
+            0L
+        }
+    }
+
     val scrambles = remember { mutableStateOf<List<String>>(emptyList()) }
     val loadingText = stringResource(R.string.timer_loading_scramble)
     val errorText = stringResource(R.string.error_failed_scrambles)
@@ -132,18 +169,7 @@ fun TimerScreen(navController: NavController) {
                             val newTimes = savedTimes.value.toMutableList()
                             newTimes.remove(time)
                             savedTimes.value = newTimes
-
-                            bestTime = newTimes.minOrNull() ?: 0L
-                            worstTime = newTimes.maxOrNull() ?: 0L
-                            averageTime = if (newTimes.isNotEmpty()) newTimes.average().toLong() else 0L
-
-                            if (newTimes.size == 5) {
-                                val sortedTimes = newTimes.sorted()
-                                val middleThree = sortedTimes.subList(1, 4)
-                                average3of5 = middleThree.average().toLong()
-                            } else {
-                                average3of5 = 0L
-                            }
+                            prefs.edit().putStringSet("saved_times", newTimes.map { it.toString() }.toSet()).apply()
                         }
                         showDeleteConfirmationDialog = false
                         timeToDelete = null
@@ -172,17 +198,30 @@ fun TimerScreen(navController: NavController) {
                 Button(
                     onClick = {
                         if (savedTimes.value.size < 5) {
-                            val newTimes = savedTimes.value + timeMillis
+                            val newTimes = (savedTimes.value + timeMillis).sorted()
                             savedTimes.value = newTimes
+                            prefs.edit().putStringSet("saved_times", newTimes.map { it.toString() }.toSet()).apply()
 
-                            bestTime = newTimes.minOrNull() ?: 0L
-                            worstTime = newTimes.maxOrNull() ?: 0L
-                            averageTime = if (newTimes.isNotEmpty()) newTimes.average().toLong() else 0L
+                            var newAchievements = emptyList<String>()
+
+                            // Achievement: SpeedSolver
+                            val wasSpeedSolverUnlocked = prefs.getBoolean("speed_solver_unlocked", false)
+                            if (timeMillis <= 60000 && !wasSpeedSolverUnlocked) { // 60 seconds
+                                prefs.edit().putBoolean("speed_solver_unlocked", true).apply()
+                                newAchievements = newAchievements + "SpeedSolver"
+                            }
 
                             if (newTimes.size == 5) {
-                                val sortedTimes = newTimes.sorted()
-                                val middleThree = sortedTimes.subList(1, 4)
-                                average3of5 = middleThree.average().toLong()
+                                // Achievement: World Record?
+                                val wasAverageViewerUnlocked = prefs.getBoolean("average_viewer_unlocked", false)
+                                if (!wasAverageViewerUnlocked) {
+                                    prefs.edit().putBoolean("average_viewer_unlocked", true).apply()
+                                    newAchievements = newAchievements + "World Record?"
+                                }
+                            }
+                            
+                            if (newAchievements.isNotEmpty()) {
+                                setAchievementsToShow(achievementsToShow + newAchievements)
                             }
                         }
                         showSaveDialog = false
@@ -255,6 +294,13 @@ fun TimerScreen(navController: NavController) {
             Button(onClick = {
                 if (scrambles.value.isNotEmpty()) {
                     currentScramble = scrambles.value.random()
+                }
+                val scrambleCount = prefs.getInt("scramble_count", 0) + 1
+                prefs.edit().putInt("scramble_count", scrambleCount).apply()
+                val wasScrambleMasterUnlocked = prefs.getBoolean("scramble_master_unlocked", false)
+                if (scrambleCount >= 20 && !wasScrambleMasterUnlocked) {
+                    prefs.edit().putBoolean("scramble_master_unlocked", true).apply()
+                    setAchievementsToShow(achievementsToShow + "SCRAMBLE, ScRaMbLe, scramble")
                 }
             }) {
                 Text(text = stringResource(R.string.button_new_scramble))

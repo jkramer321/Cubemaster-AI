@@ -37,26 +37,52 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.cs407.cubemaster.R
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
-import coil.compose.AsyncImage
 import com.cs407.cubemaster.ui.theme.MediumOrange
+
+data class Achievement(
+    val name: String,
+    val description: String,
+    val unlocked: Boolean
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavController) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("profile_prefs", Context.MODE_PRIVATE) }
+
+    val achievements = listOf(
+        Achievement(
+            name = "SpeedSolver",
+            description = "Solve a Rubik's cube in a minute or faster",
+            unlocked = prefs.getBoolean("speed_solver_unlocked", false)
+        ),
+        Achievement(
+            name = "SCRAMBLE, ScRaMbLe, scramble",
+            description = "Scramble the cube 20 times",
+            unlocked = prefs.getBoolean("scramble_master_unlocked", false)
+        ),
+        Achievement(
+            name = "World Record?",
+            description = "See your average score after 5 saved solves",
+            unlocked = prefs.getBoolean("average_viewer_unlocked", false)
+        )
+    )
 
     var selectedImageUri by remember {
         val savedUri = prefs.getString("profile_image_uri", null)?.let { Uri.parse(it) }
@@ -109,7 +135,9 @@ fun ProfileScreen(navController: NavController) {
                                 AsyncImage(
                                     model = selectedImageUri,
                                     contentDescription = stringResource(R.string.cd_profile_picture),
-                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
                             } else {
@@ -142,25 +170,24 @@ fun ProfileScreen(navController: NavController) {
                             Spacer(modifier = Modifier.height(16.dp)) // Increased spacer height
 
                             // Dropdown for Favorite Quote
-                            val allQuotes = listOf(
-                                "Quote 1" to stringResource(R.string.quote_1),
-                                "Quote 2" to stringResource(R.string.quote_2),
-                                "Quote 3" to stringResource(R.string.quote_3),
-                                "Quote 4" to stringResource(R.string.quote_4)
-                            )
-                            // For now, assume all are unlocked.
-                            val unlockedQuotes = allQuotes
+                            val unlockedQuotes = achievements.filter { it.unlocked }.map { it.name to it.name }
 
                             var expanded by remember { mutableStateOf(false) }
-                            val selectedQuoteState = remember { mutableStateOf(prefs.getString("selected_quote", allQuotes.firstOrNull()?.second ?: "") ?: "") }
+                            val selectedQuoteState = remember { mutableStateOf(prefs.getString("selected_quote", "") ?: "") }
+
+                            // If the currently selected quote is from an achievement that is now locked, reset it.
+                            if (selectedQuoteState.value.isNotEmpty() && unlockedQuotes.none { it.second == selectedQuoteState.value }) {
+                                selectedQuoteState.value = ""
+                                prefs.edit().putString("selected_quote", "").apply()
+                            }
 
                             ExposedDropdownMenuBox(
                                 expanded = expanded,
                                 onExpandedChange = { expanded = !expanded },
-                                modifier = Modifier.wrapContentWidth() // Made smaller
+                                modifier = Modifier.wrapContentWidth()
                             ) {
                                 TextField(
-                                    value = allQuotes.firstOrNull { it.second == selectedQuoteState.value }?.first ?: "", // Display short label
+                                    value = selectedQuoteState.value,
                                     onValueChange = {}, // Read-only
                                     readOnly = true,
                                     label = { Text(stringResource(R.string.profile_quote_label)) },
@@ -172,24 +199,30 @@ fun ProfileScreen(navController: NavController) {
                                             )
                                         }
                                     },
-                                    modifier = Modifier
-                                        .menuAnchor()
-                                        // Removed .fillMaxWidth() to allow wrapContentWidth() to take effect
+                                    modifier = Modifier.menuAnchor()
                                 )
 
                                 ExposedDropdownMenu(
                                     expanded = expanded,
                                     onDismissRequest = { expanded = false }
                                 ) {
-                                    unlockedQuotes.forEach { (label, fullQuote) ->
+                                    if (unlockedQuotes.isEmpty()) {
                                         DropdownMenuItem(
-                                            text = { Text(label) }, // Display the short label
-                                            onClick = {
-                                                selectedQuoteState.value = fullQuote // Update state with the full quote
-                                                prefs.edit().putString("selected_quote", fullQuote).apply() // Save full quote
-                                                expanded = false
-                                            }
+                                            text = { Text("No achievements unlocked") },
+                                            onClick = { expanded = false },
+                                            enabled = false
                                         )
+                                    } else {
+                                        unlockedQuotes.forEach { (label, quoteValue) ->
+                                            DropdownMenuItem(
+                                                text = { Text(label) },
+                                                onClick = {
+                                                    selectedQuoteState.value = quoteValue
+                                                    prefs.edit().putString("selected_quote", quoteValue).apply()
+                                                    expanded = false
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -205,14 +238,30 @@ fun ProfileScreen(navController: NavController) {
                             .background(
                                 color = DarkOrange, // Darker color
                                 shape = MaterialTheme.shapes.medium
-                            ),
-                        contentAlignment = Alignment.Center // Center the text
+                            )
                     ) {
-                        Text(
-                            text = stringResource(R.string.profile_achievements),
-                            color = Color.White, // Ensure text is visible on dark background
-                            style = MaterialTheme.typography.headlineSmall
-                        )
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = stringResource(R.string.profile_achievements),
+                                color = Color.White, // Ensure text is visible on dark background
+                                style = MaterialTheme.typography.headlineSmall
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Achievements List
+                            Column(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                achievements.forEach { achievement ->
+                                    AchievementItem(achievement = achievement)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -226,6 +275,43 @@ fun ProfileScreen(navController: NavController) {
                 .padding(16.dp)
         ) {
             Text(stringResource(R.string.button_back))
+        }
+    }
+}
+
+@Composable
+fun AchievementItem(achievement: Achievement) {
+    val alpha = if (achievement.unlocked) 1f else 0.5f
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(alpha)
+            .background(
+                color = LightOrange,
+                shape = MaterialTheme.shapes.small
+            )
+            .padding(8.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.rubik_icon),
+            contentDescription = if (achievement.unlocked) "Achievement Unlocked" else "Locked Achievement",
+            modifier = Modifier.size(32.dp),
+            tint = if (achievement.unlocked) Color.Unspecified else Color.Gray
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(
+                text = achievement.name,
+                color = Color.Black,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = achievement.description,
+                color = Color.DarkGray,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
