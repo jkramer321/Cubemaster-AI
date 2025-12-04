@@ -21,6 +21,7 @@
     <string name="requesting_permission">Requesting camera permission...</string>
     <string name="scan_instruction">Please keep a single side\nfacing the camera</string>
     <string name="cd_flip_camera">Flip Camera</string>
+    <string name="cd_toggle_flash">Toggle Flash</string>
     <string name="scan_ready_message">Ready to scan</string>
     <string name="button_start_scanning">Start Scanning</string>
     <string name="scan_scanning_face">Scanning %1$s (%2$s)</string>
