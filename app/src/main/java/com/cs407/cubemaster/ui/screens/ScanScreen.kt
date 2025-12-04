@@ -103,6 +103,13 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
         }
     }
 
+    // Auto-enable flash when scanning starts for consistent brightness
+    LaunchedEffect(scanSession.currentState) {
+        if (scanSession.currentState == ScanState.SCANNING_FACE) {
+            flashEnabled = true
+        }
+    }
+
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
             LightOrange,
