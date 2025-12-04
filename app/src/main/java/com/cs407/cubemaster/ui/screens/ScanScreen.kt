@@ -308,14 +308,14 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = "Ready to scan",
+                                text = stringResource(R.string.scan_ready_message),
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(onClick = { scanSession = scanSession.startScanning() }) {
-                                Text("Start Scanning")
+                                Text(stringResource(R.string.button_start_scanning))
                             }
                         }
                     }
@@ -327,7 +327,11 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                         ) {
                             val currentFace = scanSession.getCurrentFace()
                             Text(
-                                text = "Scanning ${currentFace?.displayName ?: "Face"} (${scanSession.getProgressText()})",
+                                text = stringResource(
+                                    R.string.scan_scanning_face,
+                                    currentFace?.displayName ?: stringResource(R.string.scan_face_fallback),
+                                    scanSession.getProgressText()
+                                ),
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
@@ -338,7 +342,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                                 CircularProgressIndicator(color = Color.White)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Processing...",
+                                    text = stringResource(R.string.scan_processing),
                                     color = Color.White,
                                     fontSize = 16.sp
                                 )
@@ -347,7 +351,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                                     onClick = onScanClick,
                                     enabled = !isProcessing && frameCaptureCallback != null
                                 ) {
-                                    Text("Scan")
+                                    Text(stringResource(R.string.button_scan))
                                 }
                             }
                         }
@@ -360,7 +364,11 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                         ) {
                             val currentFace = scanSession.getCurrentFace()
                             Text(
-                                text = "Preview ${currentFace?.displayName ?: "Face"} (${scanSession.getProgressText()})",
+                                text = stringResource(
+                                    R.string.scan_preview_face,
+                                    currentFace?.displayName ?: stringResource(R.string.scan_face_fallback),
+                                    scanSession.getProgressText()
+                                ),
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
@@ -371,10 +379,10 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 Button(onClick = onRescanClick) {
-                                    Text("Rescan")
+                                    Text(stringResource(R.string.button_rescan))
                                 }
                                 Button(onClick = onConfirmClick) {
-                                    Text("Confirm")
+                                    Text(stringResource(R.string.button_confirm))
                                 }
                             }
                         }
@@ -386,14 +394,14 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = "All faces scanned!",
+                                text = stringResource(R.string.scan_complete_message),
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(onClick = { navController.navigate("validation") }) {
-                                Text("Continue")
+                                Text(stringResource(R.string.button_continue))
                             }
                         }
                     }

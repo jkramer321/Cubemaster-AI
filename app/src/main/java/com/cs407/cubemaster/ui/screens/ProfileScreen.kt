@@ -68,18 +68,18 @@ fun ProfileScreen(navController: NavController) {
 
     val achievements = listOf(
         Achievement(
-            name = "SpeedSolver",
-            description = "Solve a Rubik's cube in a minute or faster",
+            name = stringResource(R.string.achievement_speed_solver),
+            description = stringResource(R.string.achievement_speed_solver_desc),
             unlocked = prefs.getBoolean("speed_solver_unlocked", false)
         ),
         Achievement(
-            name = "SCRAMBLE, ScRaMbLe, scramble",
-            description = "Scramble the cube 20 times",
+            name = stringResource(R.string.achievement_scramble_master),
+            description = stringResource(R.string.achievement_scramble_master_desc),
             unlocked = prefs.getBoolean("scramble_master_unlocked", false)
         ),
         Achievement(
-            name = "World Record?",
-            description = "See your average score after 5 saved solves",
+            name = stringResource(R.string.achievement_world_record),
+            description = stringResource(R.string.achievement_world_record_desc),
             unlocked = prefs.getBoolean("average_viewer_unlocked", false)
         )
     )
@@ -208,7 +208,7 @@ fun ProfileScreen(navController: NavController) {
                                 ) {
                                     if (unlockedQuotes.isEmpty()) {
                                         DropdownMenuItem(
-                                            text = { Text("No achievements unlocked") },
+                                            text = { Text(stringResource(R.string.achievement_no_unlocked_message)) },
                                             onClick = { expanded = false },
                                             enabled = false
                                         )
@@ -293,9 +293,13 @@ fun AchievementItem(achievement: Achievement) {
             )
             .padding(8.dp)
     ) {
+        val context = LocalContext.current
         Icon(
             painter = painterResource(id = R.drawable.rubik_icon),
-            contentDescription = if (achievement.unlocked) "Achievement Unlocked" else "Locked Achievement",
+            contentDescription = if (achievement.unlocked)
+                context.getString(R.string.achievement_unlocked_state)
+            else
+                context.getString(R.string.achievement_locked_state),
             modifier = Modifier.size(32.dp),
             tint = if (achievement.unlocked) Color.Unspecified else Color.Gray
         )
