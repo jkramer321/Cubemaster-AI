@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -70,6 +72,7 @@ import kotlinx.coroutines.withContext
 fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
+    var flashEnabled by remember { mutableStateOf(false) }
     var scanSession by remember { mutableStateOf(ScanSession()) }
     var frameCaptureCallback by remember { mutableStateOf<FrameCaptureCallback?>(null) }
     // DEBUG: RGB color values extracted from camera frame - uncomment assignments/usage to enable RGB debug display
@@ -217,6 +220,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                         CameraPreview(
                             modifier = Modifier.fillMaxSize(),
                             lensFacing = lensFacing,
+                            flashEnabled = flashEnabled,
                             onFrameCaptureReady = { callback ->
                                 frameCaptureCallback = callback
                             }
@@ -250,26 +254,45 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                         }
                     }
 
-                    // Flip camera button (only show when scanning)
+                    // Camera control buttons (only show when scanning)
                     if (scanSession.currentState == ScanState.SCANNING_FACE) {
-                        IconButton(
-                            onClick = {
-                                lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                                    CameraSelector.LENS_FACING_FRONT
-                                } else {
-                                    CameraSelector.LENS_FACING_BACK
-                                }
-                            },
+                        Row(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(8.dp)
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.Cameraswitch,
-                                contentDescription = stringResource(R.string.cd_flip_camera),
-                                tint = Color.White,
-                                modifier = Modifier.size(32.dp)
-                            )
+                            // Flash toggle button
+                            IconButton(
+                                onClick = {
+                                    flashEnabled = !flashEnabled
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = if (flashEnabled) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
+                                    contentDescription = stringResource(R.string.cd_toggle_flash),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+
+                            // Flip camera button
+                            IconButton(
+                                onClick = {
+                                    lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                                        CameraSelector.LENS_FACING_FRONT
+                                    } else {
+                                        CameraSelector.LENS_FACING_BACK
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Cameraswitch,
+                                    contentDescription = stringResource(R.string.cd_flip_camera),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
                         }
                     }
                 } else {

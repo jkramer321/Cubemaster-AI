@@ -1,6 +1,8 @@
 package com.cs407.cubemaster.ui.components
 
 import android.util.Log
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -36,6 +38,7 @@ interface FrameCaptureCallback {
 fun CameraPreview(
     modifier: Modifier = Modifier,
     lensFacing: Int = CameraSelector.LENS_FACING_BACK,
+    flashEnabled: Boolean = false,
     onFrameCaptureReady: ((FrameCaptureCallback) -> Unit)? = null
 ) {
     val context = LocalContext.current
@@ -53,8 +56,9 @@ fun CameraPreview(
     
     // Fallback: store latest frame in case request comes before analyzer is running
     val latestFrameRef = remember { AtomicReference<ImageProxy?>(null) }
-    
+
     var imageAnalysis by remember { mutableStateOf<ImageAnalysis?>(null) }
+    var camera by remember { mutableStateOf<Camera?>(null) }
 
     // Create frame capture callback that waits for a FRESH frame
     val frameCaptureCallback = remember {
@@ -81,7 +85,7 @@ fun CameraPreview(
         onFrameCaptureReadyState.value?.invoke(frameCaptureCallback)
     }
 
-    DisposableEffect(lensFacing) {
+    DisposableEffect(lensFacing, flashEnabled) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
         val executor: Executor = ContextCompat.getMainExecutor(context)
 
@@ -123,12 +127,15 @@ fun CameraPreview(
 
                 try {
                     cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
+                    camera = cameraProvider.bindToLifecycle(
                         lifecycleOwner,
                         cameraSelector,
                         preview,
                         analysis
                     )
+
+                    // Enable or disable flash based on parameter
+                    camera?.cameraControl?.enableTorch(flashEnabled)
                 } catch (e: Exception) {
                     Log.e("CameraPreview", "Camera binding failed", e)
                 }
