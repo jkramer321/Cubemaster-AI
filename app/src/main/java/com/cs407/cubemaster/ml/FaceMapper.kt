@@ -46,17 +46,12 @@ class FaceMapper {
     }
     
     /**
-     * Back face (s6): Column reversal (as per Cube_Reference.md)
-     * When viewed from behind, columns are mirrored
-     * Row 0 = top, Row 2 = bottom
-     * Col 0 = right edge (mirrored), Col 2 = left edge (mirrored)
+     * Back face (s6): Direct mapping
+     * The 3D renderer (getCubieColors) already handles column mirroring with `1 - x`
+     * so we don't apply any transformation here to avoid double reversal
      */
     private fun mapBackFace(grid: Array<IntArray>): Array<IntArray> {
-        return Array(3) { row ->
-            IntArray(3) { col ->
-                grid[row][2 - col] // Reverse columns
-            }
-        }
+        return grid.map { it.clone() }.toTypedArray()
     }
     
     /**
@@ -69,33 +64,31 @@ class FaceMapper {
     }
     
     /**
-     * Top face (s2): May need rotation based on scanning orientation
-     * When scanning from above, the face is rotated
-     * For standard orientation: Row 0 = back, Row 2 = front
-     * Col 0 = left, Col 2 = right
+     * Top face (s2): Row reversal to compensate for 3D renderer mapping
+     * The 3D renderer (getCubieColors) maps rows opposite to Cube_Reference:
+     * - Renderer: Row 0 → z=+1 (front), Row 2 → z=-1 (back)
+     * - Reference: Row 0 = z=-1 (back), Row 2 = z=+1 (front)
+     * So we reverse rows here to compensate
      */
     private fun mapTopFace(grid: Array<IntArray>): Array<IntArray> {
-        // Rotate 180 degrees (flip both rows and columns)
-        // This accounts for viewing from above vs from front
         return Array(3) { row ->
             IntArray(3) { col ->
-                grid[2 - row][2 - col]
+                grid[2 - row][col] // Reverse rows only
             }
         }
     }
     
     /**
-     * Bottom face (s3): May need rotation based on scanning orientation
-     * When scanning from below, the face orientation differs
-     * For standard orientation: Row 0 = front, Row 2 = back
-     * Col 0 = left, Col 2 = right
+     * Bottom face (s3): Row reversal to compensate for 3D renderer mapping
+     * The 3D renderer (getCubieColors) maps rows opposite to Cube_Reference:
+     * - Renderer: Row 0 → z=-1 (back), Row 2 → z=+1 (front)
+     * - Reference: Row 0 = z=+1 (front), Row 2 = z=-1 (back)
+     * So we reverse rows here to compensate
      */
     private fun mapBottomFace(grid: Array<IntArray>): Array<IntArray> {
-        // Rotate 180 degrees (flip both rows and columns)
-        // This accounts for viewing from below vs from front
         return Array(3) { row ->
             IntArray(3) { col ->
-                grid[2 - row][2 - col]
+                grid[2 - row][col] // Reverse rows only
             }
         }
     }
