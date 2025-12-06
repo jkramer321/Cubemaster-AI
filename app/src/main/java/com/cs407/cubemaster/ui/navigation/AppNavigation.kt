@@ -13,7 +13,7 @@ import com.cs407.cubemaster.ui.screens.PermissionScreen
 import com.cs407.cubemaster.ui.screens.ProfileScreen
 import com.cs407.cubemaster.ui.screens.ResultScreen
 import com.cs407.cubemaster.ui.screens.ScanScreen
-
+import com.cs407.cubemaster.ui.screens.SolveScreen
 import com.cs407.cubemaster.ui.screens.StartScreen
 import com.cs407.cubemaster.ui.screens.TimerScreen
 import com.cs407.cubemaster.ui.screens.ValidationScreen
@@ -77,6 +77,15 @@ fun AppNavigation(
             popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
         ) {
             ResultScreen(navController = navController)
+        }
+        composable(
+            "solve",
+            enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(700)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(700)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(700)) }
+        ) {
+            SolveScreen(navController = navController)
         }
         composable(
             "timer",
