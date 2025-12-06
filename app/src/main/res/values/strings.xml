@@ -61,6 +61,7 @@
     <string name="nav_new_btn3">New Btn 3</string>
     <string name="nav_new_btn4">Profile</string>
     <string name="nav_profile">Profile</string>
+    <string name="nav_back">Back</string>
 
     <!-- Error Messages -->
     <string name="error_copying_file">Error copying file</string>
@@ -124,7 +125,7 @@
 
     <!-- Result Screen -->
     <string name="nav_timer">Timer</string>
-    <string name="nav_cube">Cube</string>
+    <string name="nav_cube">Solve</string>
     <string name="cd_cube">Cube</string>
 
     <!-- Interactive 3D Cube -->
