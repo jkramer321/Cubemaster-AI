@@ -115,15 +115,15 @@ fun StartScreen(modifier: Modifier = Modifier, navController: NavController) {
 
             }
             // Debug button to test face mapping with a known cube pattern
-            Button(
-                onClick = {
-                    CubeHolder.scannedCube = createTestCube()
-                    navController.navigate("validation")
-                },
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                Text(text = "Test Face Mapping", fontSize = 12.sp)
-            }
+//            Button(
+//                onClick = {
+//                    CubeHolder.scannedCube = createTestCube()
+//                    navController.navigate("validation")
+//                },
+//                modifier = Modifier.padding(bottom = 16.dp)
+//            ) {
+//                Text(text = stringResource(R.string.test_face_mapping), fontSize = 12.sp)
+//            }
         }
     }
 }

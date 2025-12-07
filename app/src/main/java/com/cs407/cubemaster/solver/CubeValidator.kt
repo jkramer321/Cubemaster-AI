@@ -1,5 +1,7 @@
 package com.cs407.cubemaster.solver
 
+import android.content.Context
+import com.cs407.cubemaster.R
 import com.cs407.cubemaster.data.Cube
 
 /**
@@ -246,7 +248,9 @@ object CubeValidator {
 
     /**
      * Get a human-readable error message
+     * @deprecated Use getErrorMessage(Context, ValidationResult) instead
      */
+    @Deprecated("Use getErrorMessage(Context, ValidationResult) instead")
     fun getErrorMessage(result: ValidationResult): String {
         if (result.isValid) return "Cube is valid"
 
@@ -270,6 +274,35 @@ object CubeValidator {
             ValidationResult.ErrorCode.CONVERSION_ERROR ->
                 "Could not interpret cube configuration. ${result.errorMessage}"
             null -> result.errorMessage ?: "Unknown error"
+        }
+    }
+
+    /**
+     * Get a human-readable error message using string resources
+     */
+    fun getErrorMessage(context: Context, result: ValidationResult): String {
+        if (result.isValid) return context.getString(R.string.validation_cube_valid)
+
+        return when (result.errorCode) {
+            ValidationResult.ErrorCode.INVALID_COLOR_COUNT ->
+                context.getString(R.string.validation_invalid_color_count, result.errorMessage ?: "")
+            ValidationResult.ErrorCode.DUPLICATE_CORNER ->
+                context.getString(R.string.validation_duplicate_corner)
+            ValidationResult.ErrorCode.DUPLICATE_EDGE ->
+                context.getString(R.string.validation_duplicate_edge)
+            ValidationResult.ErrorCode.MISSING_CORNER ->
+                context.getString(R.string.validation_missing_corner, result.errorMessage ?: "")
+            ValidationResult.ErrorCode.MISSING_EDGE ->
+                context.getString(R.string.validation_missing_edge, result.errorMessage ?: "")
+            ValidationResult.ErrorCode.INVALID_CORNER_ORIENTATION ->
+                context.getString(R.string.validation_invalid_corner_orientation, result.errorMessage ?: "")
+            ValidationResult.ErrorCode.INVALID_EDGE_ORIENTATION ->
+                context.getString(R.string.validation_invalid_edge_orientation, result.errorMessage ?: "")
+            ValidationResult.ErrorCode.PARITY_ERROR ->
+                context.getString(R.string.validation_parity_error, result.errorMessage ?: "")
+            ValidationResult.ErrorCode.CONVERSION_ERROR ->
+                context.getString(R.string.validation_conversion_error, result.errorMessage ?: "")
+            null -> result.errorMessage ?: context.getString(R.string.error_unknown)
         }
     }
 }

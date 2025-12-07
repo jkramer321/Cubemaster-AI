@@ -333,7 +333,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                             Text(
                                 text = stringResource(
                                     R.string.scan_scanning_face,
-                                    currentFace?.displayName ?: stringResource(R.string.scan_face_fallback),
+                                    currentFace?.let { stringResource(it.displayNameRes) } ?: stringResource(R.string.scan_face_fallback),
                                     scanSession.getProgressText()
                                 ),
                                 color = Color.White,
@@ -370,7 +370,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                             Text(
                                 text = stringResource(
                                     R.string.scan_preview_face,
-                                    currentFace?.displayName ?: stringResource(R.string.scan_face_fallback),
+                                    currentFace?.let { stringResource(it.displayNameRes) } ?: stringResource(R.string.scan_face_fallback),
                                     scanSession.getProgressText()
                                 ),
                                 color = Color.White,

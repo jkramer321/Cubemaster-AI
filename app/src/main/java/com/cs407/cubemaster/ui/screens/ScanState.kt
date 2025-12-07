@@ -1,5 +1,7 @@
 package com.cs407.cubemaster.ui.screens
 
+import androidx.annotation.StringRes
+import com.cs407.cubemaster.R
 import com.cs407.cubemaster.data.Cube
 
 /**
@@ -16,13 +18,13 @@ enum class ScanState {
  * Defines the order and mapping of faces to scan
  * Order: FRONT → RIGHT → BACK → LEFT → TOP → BOTTOM
  */
-enum class FaceOrder(val displayName: String, val cubeSide: String, val index: Int) {
-    FRONT("Front", "s1", 0),
-    RIGHT("Right", "s5", 1),
-    BACK("Back", "s6", 2),
-    LEFT("Left", "s4", 3),
-    TOP("Top", "s2", 4),
-    BOTTOM("Bottom", "s3", 5);
+enum class FaceOrder(@StringRes val displayNameRes: Int, val cubeSide: String, val index: Int) {
+    FRONT(R.string.face_front, "s1", 0),
+    RIGHT(R.string.face_right, "s5", 1),
+    BACK(R.string.face_back, "s6", 2),
+    LEFT(R.string.face_left, "s4", 3),
+    TOP(R.string.face_top, "s2", 4),
+    BOTTOM(R.string.face_bottom, "s3", 5);
 
     companion object {
         /**
@@ -72,7 +74,7 @@ data class ScanSession(
      * Get progress text (e.g., "1/6")
      */
     fun getProgressText(): String {
-        return "${scannedFaces.size}/${FaceOrder.TOTAL_FACES}"
+        return "${currentFaceIndex + 1}/${FaceOrder.TOTAL_FACES}"
     }
 
     /**
