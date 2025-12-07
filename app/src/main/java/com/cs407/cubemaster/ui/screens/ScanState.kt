@@ -74,7 +74,7 @@ data class ScanSession(
      * Get progress text (e.g., "1/6")
      */
     fun getProgressText(): String {
-        return "${scannedFaces.size}/${FaceOrder.TOTAL_FACES}"
+        return "${currentFaceIndex + 1}/${FaceOrder.TOTAL_FACES}"
     }
 
     /**
