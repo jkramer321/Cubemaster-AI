@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -42,8 +44,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.cs407.cubemaster.R
+import com.cs407.cubemaster.data.Cube
 import com.cs407.cubemaster.data.CubeHolder
 import com.cs407.cubemaster.solver.KociembaSolver
+import com.cs407.cubemaster.ui.components.Interactive3DCube
+import com.cs407.cubemaster.ui.components.performMove
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
 import kotlinx.coroutines.launch
@@ -55,12 +60,28 @@ fun SolveScreen(navController: NavController) {
     val context = LocalContext.current
     // Solver state
     val solver = remember { KociembaSolver() }
-    var solutionSteps by remember { mutableStateOf((1..10).map { "Step $it" }) }
+    var solutionSteps by remember { mutableStateOf<List<String>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     var showBackDialog by remember { mutableStateOf(false) }
-    var currentStep by remember { mutableStateOf(1) }
+    var expandedStep by remember { mutableStateOf<Int?>(null) }
+
+    // Compute cube states for each step
+    val cubeStates = remember(solutionSteps) {
+        if (solutionSteps.isEmpty()) {
+            emptyList()
+        } else {
+            val initialCube = CubeHolder.scannedCube ?: com.cs407.cubemaster.ui.components.createSolvedCube()
+            val states = mutableListOf(initialCube)
+            var currentCube = initialCube
+            solutionSteps.forEach { move ->
+                currentCube = performMove(currentCube, move)
+                states.add(currentCube)
+            }
+            states
+        }
+    }
 
     if (showBackDialog) {
         AlertDialog(
@@ -85,43 +106,44 @@ fun SolveScreen(navController: NavController) {
 
     // Initialize solver and compute solution when screen loads
     LaunchedEffect(Unit) {
-        // Disabled for now to work with placeholder data
-        // scope.launch {
-        //     try {
-        //         isLoading = true
-        //         solver.initialize()
-        //
-        //         val cube = CubeHolder.scannedCube
-        //         if (cube != null) {
-        //             // Validate cube first
-        //             val validationResult = com.cs407.cubemaster.solver.CubeValidator.validate(cube)
-        //             if (!validationResult.isValid) {
-        //                 errorMessage = com.cs407.cubemaster.solver.CubeValidator.getErrorMessage(validationResult)
-        //                 isLoading = false
-        //                 return@launch
-        //             }
-        //
-        //             // Check if already solved
-        //             if (cube.isSolved()) {
-        //                 solutionSteps = listOf(context.getString(R.string.cube_already_solved))
-        //                 isLoading = false
-        //                 return@launch
-        //             }
-        //
-        //             // Solve the cube
-        //             val solution = solver.solve(cube)
-        //             if (solution != null) {
-        //                 solutionSteps = solution
-        //             } else {
-        //                 errorMessage = context.getString(R.string.error_no_solution)
-        //             }
-        //         }
-        //     } catch (t: Throwable) {
-        //         errorMessage = "${context.getString(R.string.error_solving_cube)}: ${t.message}"
-        //     } finally {
-        //         isLoading = false
-        //     }
-        // }
+        scope.launch {
+            try {
+                isLoading = true
+                solver.initialize()
+
+                val cube = CubeHolder.scannedCube
+                if (cube != null) {
+                    // Validate cube first
+                    val validationResult = com.cs407.cubemaster.solver.CubeValidator.validate(cube)
+                    if (!validationResult.isValid) {
+                        errorMessage = com.cs407.cubemaster.solver.CubeValidator.getErrorMessage(validationResult)
+                        isLoading = false
+                        return@launch
+                    }
+
+                    // Check if already solved
+                    if (cube.isSolved()) {
+                        errorMessage = context.getString(R.string.cube_already_solved)
+                        isLoading = false
+                        return@launch
+                    }
+
+                    // Solve the cube
+                    val solution = solver.solve(cube)
+                    if (solution != null) {
+                        solutionSteps = solution
+                    } else {
+                        errorMessage = context.getString(R.string.error_no_solution)
+                    }
+                } else {
+                    errorMessage = "No cube has been scanned. Please scan a cube first."
+                }
+            } catch (t: Throwable) {
+                errorMessage = "${context.getString(R.string.error_solving_cube)}: ${t.message}"
+            } finally {
+                isLoading = false
+            }
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -130,61 +152,41 @@ fun SolveScreen(navController: NavController) {
                 .fillMaxSize()
                 .background(gradientBrush)
         ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                AnimatedContent(
-                    targetState = currentStep,
-                    transitionSpec = {
-                        val duration = 700 // Animation duration in milliseconds
-                        if (targetState > initialState) { // Moving to a higher step (e.g., 1 -> 2)
-                            (slideInVertically(animationSpec = tween(duration)) { fullHeight -> -fullHeight } +
-                                    fadeIn(animationSpec = tween(duration))) togetherWith
-                                    (slideOutVertically(animationSpec = tween(duration)) { fullHeight -> fullHeight } +
-                                            fadeOut(animationSpec = tween(duration)))
-                        } else { // Moving to a lower step (e.g., 2 -> 1)
-                            (slideInVertically(animationSpec = tween(duration)) { fullHeight -> fullHeight } +
-                                    fadeIn(animationSpec = tween(duration))) togetherWith
-                                    (slideOutVertically(animationSpec = tween(duration)) { fullHeight -> -fullHeight } +
-                                            fadeOut(animationSpec = tween(duration)))
-                        }
-                    }, label = ""
-                ) { targetStep ->
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        // Next step
-                        if (targetStep < solutionSteps.size) {
-                            StepBox(
-                                step = targetStep + 1,
-                                isCurrent = false,
-                                onClick = { currentStep = targetStep + 1 }
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-
-                        // Current step
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (errorMessage != null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = errorMessage ?: "",
+                        color = Color.White,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    itemsIndexed(solutionSteps) { index, move ->
                         StepBox(
-                            step = targetStep,
-                            isCurrent = true,
-                            onClick = { /* Does nothing for now */ }
+                            stepNumber = index + 1,
+                            move = move,
+                            cubeState = cubeStates[index + 1],
+                            isExpanded = expandedStep == index,
+                            onClick = {
+                                expandedStep = if (expandedStep == index) null else index
+                            }
                         )
-
-                        // Previous step
-                        if (targetStep > 1) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            StepBox(
-                                step = targetStep - 1,
-                                isCurrent = false,
-                                onClick = { currentStep = targetStep - 1 }
-                            )
-                        }
                     }
                 }
             }
@@ -201,18 +203,24 @@ fun SolveScreen(navController: NavController) {
 }
 
 @Composable
-fun StepBox(step: Int, isCurrent: Boolean, onClick: () -> Unit) {
-    val boxModifier = if (isCurrent) {
+fun StepBox(
+    stepNumber: Int,
+    move: String,
+    cubeState: Cube,
+    isExpanded: Boolean,
+    onClick: () -> Unit
+) {
+    val boxModifier = if (isExpanded) {
         Modifier
-            .fillMaxWidth(0.8f)
-            .aspectRatio(1f)
+            .fillMaxWidth()
+            .height(500.dp)
             .clip(RoundedCornerShape(15.dp))
             .background(DarkOrange)
             .clickable(onClick = onClick)
     } else {
         Modifier
-            .fillMaxWidth(0.8f)
-            .height(50.dp)
+            .fillMaxWidth()
+            .height(70.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(LightOrange)
             .clickable(onClick = onClick)
@@ -222,11 +230,40 @@ fun StepBox(step: Int, isCurrent: Boolean, onClick: () -> Unit) {
         modifier = boxModifier,
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "Step $step",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = if (isCurrent) 30.sp else 20.sp
-        )
+        if (isExpanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Step $stepNumber: $move",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    Interactive3DCube(
+                        modifier = Modifier.fillMaxSize(),
+                        cube = cubeState,
+                        showControls = false
+                    )
+                }
+            }
+        } else {
+            Text(
+                text = "Step $stepNumber: $move",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        }
     }
 }

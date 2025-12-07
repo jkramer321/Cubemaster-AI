@@ -49,14 +49,15 @@ enum class RotationAxis { X, Y, Z }
 @Composable
 fun Interactive3DCube(
     modifier: Modifier = Modifier,
-    cube: Cube = createSolvedCube()
+    cube: Cube = createSolvedCube(),
+    showControls: Boolean = true
 ) {
     var rotationX by remember { mutableStateOf(-25f) }
     var rotationY by remember { mutableStateOf(35f) }
     var scale by remember { mutableStateOf(1f) }
 
     // Create a mutable cube that we can rotate
-    var currentCube by remember { mutableStateOf(cube.freeze()) }
+    var currentCube by remember(cube) { mutableStateOf(cube.freeze()) }
 
     // Animation states
     var currentAnimation by remember { mutableStateOf<MoveAnimation?>(null) }
@@ -80,13 +81,14 @@ fun Interactive3DCube(
         label = "cube_rotation"
     )
 
-    Column(modifier = modifier.fillMaxSize()) {
-        // Cube display area
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(2.5f)
-        ) {
+    if (showControls) {
+        Column(modifier = modifier.fillMaxSize()) {
+            // Cube display area
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(2.5f)
+            ) {
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
@@ -174,6 +176,37 @@ fun Interactive3DCube(
             },
             isAnimating = isAnimating
         )
+        }
+    } else {
+        // View-only mode without controls
+        Box(modifier = modifier.fillMaxSize()) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            rotationY += dragAmount.x * 0.3f
+                            rotationX -= dragAmount.y * 0.3f
+                        }
+                    }
+            ) {
+                val cubeSize = size.minDimension * 0.7f * scale
+                val centerX = size.width / 2f
+                val centerY = size.height / 2f
+
+                draw3DRubiksCube(
+                    centerX = centerX,
+                    centerY = centerY,
+                    cubeSize = cubeSize,
+                    rotationX = rotationX,
+                    rotationY = rotationY,
+                    cube = currentCube,
+                    animation = currentAnimation,
+                    animationProgress = animatedRotation
+                )
+            }
+        }
     }
 }
 
@@ -326,7 +359,7 @@ fun MoveButton(
 // Perform Rubik's Cube moves
 // Mapped according to standard notation with Front=White, Top=Yellow, Bottom=Red,
 // Left=Orange, Right=Blue, Back=Green
-fun performMove(cube: Cube, move: String): Cube {
+internal fun performMove(cube: Cube, move: String): Cube {
     val newCube = cube.freeze()
 
     when (move) {
