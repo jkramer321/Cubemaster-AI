@@ -139,4 +139,43 @@
     <string name="error_solving_cube">An error occurred while solving the cube</string>
     <string name="no_solution_available">No solution available</string>
     <string name="cube_already_solved">Cube is already solved!</string>
+
+    <!-- Test Screen -->
+    <string name="test_face_mapping">Test Face Mapping</string>
+
+    <!-- Face Names (used in ScanState) -->
+    <string name="face_front">Front</string>
+    <string name="face_right">Right</string>
+    <string name="face_back">Back</string>
+    <string name="face_left">Left</string>
+    <string name="face_top">Top</string>
+    <string name="face_bottom">Bottom</string>
+
+    <!-- Cube Validation Errors -->
+    <string name="error_invalid_row">Invalid row index</string>
+    <string name="error_invalid_side_row">Invalid side or row</string>
+    <string name="error_invalid_column">Invalid column index</string>
+    <string name="error_invalid_side">Invalid side</string>
+    <string name="error_duplicate_corners">Found duplicate corner pieces</string>
+    <string name="error_duplicate_edges">Found duplicate edge pieces</string>
+    <string name="error_cube_valid">Cube is valid</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="validation_cube_valid">Cube is valid</string>
+    <string name="validation_invalid_color_count">Invalid color distribution. %1$s</string>
+    <string name="validation_duplicate_corner">Duplicate corner pieces detected. Please re-scan the cube.</string>
+    <string name="validation_duplicate_edge">Duplicate edge pieces detected. Please re-scan the cube.</string>
+    <string name="validation_missing_corner">Missing corner pieces. %1$s</string>
+    <string name="validation_missing_edge">Missing edge pieces. %1$s</string>
+    <string name="validation_invalid_corner_orientation">Invalid corner orientation. %1$s</string>
+    <string name="validation_invalid_edge_orientation">Invalid edge orientation. %1$s</string>
+    <string name="validation_parity_error">This cube is physically impossible to solve. %1$s</string>
+    <string name="validation_conversion_error">Could not interpret cube configuration. %1$s</string>
+
+    <!-- Color Names -->
+    <string name="color_orange">ORANGE</string>
+    <string name="color_yellow">YELLOW</string>
+    <string name="color_unknown">UNKNOWN</string>
+
+    <!-- Step Display -->
+    <string name="step_format">Step %1$d: %2$s</string>
 </resources>

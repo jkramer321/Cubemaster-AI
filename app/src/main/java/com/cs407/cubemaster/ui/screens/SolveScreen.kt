@@ -116,7 +116,7 @@ fun SolveScreen(navController: NavController) {
                     // Validate cube first
                     val validationResult = com.cs407.cubemaster.solver.CubeValidator.validate(cube)
                     if (!validationResult.isValid) {
-                        errorMessage = com.cs407.cubemaster.solver.CubeValidator.getErrorMessage(validationResult)
+                        errorMessage = com.cs407.cubemaster.solver.CubeValidator.getErrorMessage(context, validationResult)
                         isLoading = false
                         return@launch
                     }
@@ -239,7 +239,7 @@ fun StepBox(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Step $stepNumber: $move",
+                    text = stringResource(R.string.step_format, stepNumber, move),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp
@@ -259,7 +259,7 @@ fun StepBox(
             }
         } else {
             Text(
-                text = "Step $stepNumber: $move",
+                text = stringResource(R.string.step_format, stepNumber, move),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
