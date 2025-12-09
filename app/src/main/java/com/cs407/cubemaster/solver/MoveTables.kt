@@ -124,15 +124,33 @@ object MoveTables {
             }
         }
 
-        // Initialize slice sorted table
-        for (ss in 0..23) {
-            val state = CubeState.solved()
-            // Set up a state with given slice sorted coordinate
-            // (this is simplified - in reality we'd need to carefully set edge permutation)
+        // Initialize slice sorted table using BFS to generate all reachable states
+        val generatedSliceCoords = mutableSetOf<Int>()
+        val sliceQueue = ArrayDeque<CubeState>()
+        val solvedState = CubeState.solved()
+        sliceQueue.add(solvedState)
+        generatedSliceCoords.add(0)
+
+        // Fill table for solved state first
+        for ((moveIdx, move) in phase2Moves.withIndex()) {
+            val newState = solvedState.applyMove(move)
+            sliceSortedMoveTable[0][moveIdx] = CoordinateSystem.getSliceSortedCoordinate(newState)
+        }
+
+        while (sliceQueue.isNotEmpty() && generatedSliceCoords.size < 24) {
+            val state = sliceQueue.removeFirst()
+            val ss = CoordinateSystem.getSliceSortedCoordinate(state)
 
             for ((moveIdx, move) in phase2Moves.withIndex()) {
                 val newState = state.applyMove(move)
-                sliceSortedMoveTable[ss][moveIdx] = CoordinateSystem.getSliceSortedCoordinate(newState)
+                val newSS = CoordinateSystem.getSliceSortedCoordinate(newState)
+
+                sliceSortedMoveTable[ss][moveIdx] = newSS
+
+                if (newSS !in generatedSliceCoords && generatedSliceCoords.size < 24) {
+                    generatedSliceCoords.add(newSS)
+                    sliceQueue.add(newState)
+                }
             }
         }
     }
