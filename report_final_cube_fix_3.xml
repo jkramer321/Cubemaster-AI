@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.cs407.cubemaster.solver.ScrambledCubeSolverTest" tests="3" skipped="0" failures="3" errors="0" timestamp="2025-12-09T01:03:26.860Z" hostname="MacBook-Pro-5.local" time="42.365">
+  <properties/>
+  <testcase name="testMediumScramble" classname="com.cs407.cubemaster.solver.ScrambledCubeSolverTest" time="33.914">
+    <failure message="org.junit.runners.model.TestTimedOutException: test timed out after 30000 milliseconds" type="org.junit.runners.model.TestTimedOutException">org.junit.runners.model.TestTimedOutException: test timed out after 30000 milliseconds
+	at java.base/jdk.internal.misc.Unsafe.park(Native Method)
+	at java.base/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:98)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:69)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:47)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source)
+	at com.cs407.cubemaster.solver.ScrambledCubeSolverTest.testMediumScramble(ScrambledCubeSolverTest.kt:59)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+</failure>
+  </testcase>
+  <testcase name="testSimpleScramble" classname="com.cs407.cubemaster.solver.ScrambledCubeSolverTest" time="4.348">
+    <failure message="java.lang.AssertionError: Cube should be solved after applying solution" type="java.lang.AssertionError">java.lang.AssertionError: Cube should be solved after applying solution
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.cs407.cubemaster.solver.ScrambledCubeSolverTest$testSimpleScramble$1.invokeSuspend(ScrambledCubeSolverTest.kt:55)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:101)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:263)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:95)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:69)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:47)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source)
+	at com.cs407.cubemaster.solver.ScrambledCubeSolverTest.testSimpleScramble(ScrambledCubeSolverTest.kt:19)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+</failure>
+  </testcase>
+  <testcase name="testHardScramble" classname="com.cs407.cubemaster.solver.ScrambledCubeSolverTest" time="4.103">
+    <failure message="java.lang.IllegalStateException: Invalid cube state: CO sum=7, EO sum=5, CP=[0, 3, 6, 0, 4, 0, 2, 7], EP=[1, 11, 3, 2, 7, 0, 9, 10, 8, 6, 9, 0]" type="java.lang.IllegalStateException">java.lang.IllegalStateException: Invalid cube state: CO sum=7, EO sum=5, CP=[0, 3, 6, 0, 4, 0, 2, 7], EP=[1, 11, 3, 2, 7, 0, 9, 10, 8, 6, 9, 0]
+	at com.cs407.cubemaster.solver.CubeConverter.fromCube(CubeConverter.kt:69)
+	at com.cs407.cubemaster.solver.KociembaSolver$solve$2.invokeSuspend(KociembaSolver.kt:65)
+	at _COROUTINE._BOUNDARY._(CoroutineDebugging.kt:42)
+	at com.cs407.cubemaster.solver.ScrambledCubeSolverTest$testHardScramble$1.invokeSuspend(ScrambledCubeSolverTest.kt:100)
+Caused by: java.lang.IllegalStateException: Invalid cube state: CO sum=7, EO sum=5, CP=[0, 3, 6, 0, 4, 0, 2, 7], EP=[1, 11, 3, 2, 7, 0, 9, 10, 8, 6, 9, 0]
+	at com.cs407.cubemaster.solver.CubeConverter.fromCube(CubeConverter.kt:69)
+	at com.cs407.cubemaster.solver.KociembaSolver$solve$2.invokeSuspend(KociembaSolver.kt:65)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:101)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:589)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:832)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:720)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:707)
+</failure>
+  </testcase>
+  <system-out><![CDATA[Starting testMediumScramble...
+DEBUG: KociembaSolver: Initializing move tables...
+DEBUG: KociembaSolver: Initializing pruning tables...
+DEBUG: KociembaSolver: Solver initialized successfully
+DEBUG: KociembaSolver: Starting Phase 1 search...
+DEBUG: KociembaSolver: Phase 1 complete: 7 moves
+DEBUG: KociembaSolver: Starting Phase 2 search...
+Starting testSimpleScramble...
+Initializing solver...
+DEBUG: KociembaSolver: Initializing move tables...
+DEBUG: KociembaSolver: Initializing pruning tables...
+DEBUG: KociembaSolver: Solver initialized successfully
+Solver initialized.
+Cube Validity: true
+Scrambled State Details:
+Corner Perm: [4, 1, 3, 2, 0, 5, 6, 7]
+Corner Ori: [2, 0, 0, 2, 2, 0, 0, 0]
+Edge Perm: [8, 1, 2, 0, 4, 5, 6, 7, 3, 9, 10, 11]
+Edge Ori: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Solving...
+DEBUG: KociembaSolver: Starting Phase 1 search...
+DEBUG: KociembaSolver: Phase 1 complete: 4 moves
+DEBUG: KociembaSolver: Starting Phase 2 search...
+DEBUG: KociembaSolver: Phase 2 complete: 5 moves
+DEBUG: KociembaSolver: Solution found: 9 moves
+DEBUG: KociembaSolver: Moves: U R U' R D U' B2 D' U
+Solve returned: [U, R, U', R, D, U', B2, D', U]
+Starting testHardScramble...
+DEBUG: KociembaSolver: Initializing move tables...
+DEBUG: KociembaSolver: Initializing pruning tables...
+DEBUG: KociembaSolver: Solver initialized successfully
+]]></system-out>
+  <system-err><![CDATA[Invalid cube state: CO sum=7, EO sum=5, CP=[0, 3, 6, 0, 4, 0, 2, 7], EP=[1, 11, 3, 2, 7, 0, 9, 10, 8, 6, 9, 0]
+Invalid cube state: CO sum=7, EO sum=5, CP=[0, 3, 6, 0, 4, 0, 2, 7], EP=[1, 11, 3, 2, 7, 0, 9, 10, 8, 6, 9, 0]
+]]></system-err>
+</testsuite>

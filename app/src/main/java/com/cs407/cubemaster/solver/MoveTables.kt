@@ -34,6 +34,11 @@ object MoveTables {
         initialized = true
     }
 
+    fun forceInitialize() {
+        initialized = false
+        initialize()
+    }
+
     private fun initializePhase1Tables() {
         val allMoves = CubeMove.values()
 
@@ -62,8 +67,9 @@ object MoveTables {
         // Initialize slice table (this is more complex - need to generate all slice positions)
         val generatedSlices = mutableSetOf<Int>()
         val queue = ArrayDeque<CubeState>()
-        queue.add(CubeState.solved())
-        generatedSlices.add(0)
+        val solvedState = CubeState.solved()
+        queue.add(solvedState)
+        generatedSlices.add(CoordinateSystem.getSliceCoordinate(solvedState))
 
         while (queue.isNotEmpty()) {
             val state = queue.removeFirst()
