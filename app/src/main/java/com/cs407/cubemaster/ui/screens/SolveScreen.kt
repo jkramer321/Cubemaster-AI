@@ -109,7 +109,7 @@ fun SolveScreen(navController: NavController) {
         scope.launch {
             try {
                 isLoading = true
-                solver.initialize()
+                solver.initialize(context)
 
                 val cube = CubeHolder.scannedCube
                 if (cube != null) {

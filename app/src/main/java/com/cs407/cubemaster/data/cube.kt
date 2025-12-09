@@ -138,34 +138,81 @@ data class Cube(val s1: MutableList<MutableList<Int>>,
             throw IllegalArgumentException("Invalid column index")
         }
 
-
-
         // For s6 (back), we need to SWAP the column index due to mirroring
         // s6 is stored mirrored: when viewing from FRONT, right side is col 0 from BEHIND
         // R move (col 2 from front) affects B face col 0 (from behind)
         // L move (col 0 from front) affects B face col 2 (from behind)
         val s6ColIndex = 2 - colIndex  // SWAP the index
         
-        val temp1 = getCol("s1", colIndex).toList()
-        val temp2 = getCol("s2", colIndex).toList()
-        val temp3 = getCol("s3", colIndex).toList()
-        val temp6 = getCol("s6", s6ColIndex).toList().reversed() // Read from s6 (swapped) and reverse
+        // Read columns (top to bottom: row 0, 1, 2)
+        // getCol returns [row0, row1, row2] = [top, middle, bottom]
+        val temp1 = getCol("s1", colIndex).toList()  // Front column (normal orientation)
+        val temp2 = getCol("s2", colIndex).toList()  // Top column (normal orientation)
+        val temp3 = getCol("s3", colIndex).toList()  // Bottom column (normal orientation)
+        // Back column: read from swapped index (back is stored "from behind")
+        // getCol returns [top, middle, bottom] in "from behind" perspective
+        // We need to reverse to get front perspective: [bottom, middle, top]
+        val temp6Raw = getCol("s6", s6ColIndex).toList()
+        val temp6 = temp6Raw.reversed()  // Convert to front perspective
 
-        if (rotateUp) {
-            // R move: U -> B -> D -> F -> U
-            setCol("s1", colIndex, temp3) // F gets D
-            setCol("s2", colIndex, temp1) // U gets F
-            setCol("s6", s6ColIndex, temp2.reversed()) // B gets U (reversed)
-            setCol("s3", colIndex, temp6) // D gets B (already reversed from read)
-        } else {
-            // R' move: U -> F -> D -> B -> U
-            setCol("s1", colIndex, temp2) // F gets U
-            setCol("s2", colIndex, temp6) // U gets B (already reversed from read)
-            setCol("s6", s6ColIndex, temp3.reversed()) // B gets D (reversed)
-            setCol("s3", colIndex, temp1) // D gets F
+        // Separate logic for L moves (colIndex=0) vs R moves (colIndex=2)
+        // According to CUBE_OPERATIONS.md:
+        // - L move (rotateUp=false): F -> D -> B -> U -> F (DOWN on front)
+        // - L' move (rotateUp=true): F -> U -> B -> D -> F (UP on front)
+        // - R move (rotateUp=true): F -> U -> B -> D -> F (UP on front)
+        // - R' move (rotateUp=false): F -> D -> B -> U -> F (DOWN on front)
+        when (colIndex) {
+            0 -> {
+                // L move (left column)
+                if (rotateUp) {
+                    // L' move: F -> U -> B -> D -> F (column goes UP on front)
+                    // s1[*,0] → s2[*,0] (same order)
+                    // s2[*,0] → s6[*,2] (REVERSED order - top to back)
+                    // s6[*,2] → s3[*,0] (REVERSED order - back to bottom)
+                    // s3[*,0] → s1[*,0] (same order)
+                    setCol("s1", colIndex, temp3) // F gets D (bottom to front, same order)
+                    setCol("s2", colIndex, temp1) // U gets F (front to top, same order)
+                    setCol("s6", s6ColIndex, temp2.reversed()) // B gets U (top to back, REVERSED for storage)
+                    setCol("s3", colIndex, temp6) // D gets B (back to bottom, temp6 already in front perspective)
+                } else {
+                    // L move: F -> D -> B -> U -> F (column goes DOWN on front)
+                    // s1[*,0] → s3[*,0] (same order)
+                    // s3[*,0] → s6[*,2] (REVERSED order - bottom to back)
+                    // s6[*,2] → s2[*,0] (REVERSED order - back to top)
+                    // s2[*,0] → s1[*,0] (same order)
+                    setCol("s1", colIndex, temp2) // F gets U (top to front, same order)
+                    setCol("s2", colIndex, temp6) // U gets B (back to top, temp6 already in front perspective)
+                    setCol("s6", s6ColIndex, temp3.reversed()) // B gets D (bottom to back, REVERSED for storage)
+                    setCol("s3", colIndex, temp1) // D gets F (front to bottom, same order)
+                }
+            }
+            2 -> {
+                // R move (right column)
+                if (rotateUp) {
+                    // R move: F -> U -> B -> D -> F (column goes UP on front)
+                    // s1[*,2] → s2[*,2] (same order)
+                    // s2[*,2] → s6[*,0] (REVERSED order - top to back)
+                    // s6[*,0] → s3[*,2] (REVERSED order - back to bottom)
+                    // s3[*,2] → s1[*,2] (same order)
+                    setCol("s1", colIndex, temp3) // F gets D (bottom to front, same order)
+                    setCol("s2", colIndex, temp1) // U gets F (front to top, same order)
+                    setCol("s6", s6ColIndex, temp2.reversed()) // B gets U (top to back, REVERSED for storage)
+                    setCol("s3", colIndex, temp6) // D gets B (back to bottom, temp6 already in front perspective)
+                } else {
+                    // R' move: F -> D -> B -> U -> F (column goes DOWN on front)
+                    // s1[*,2] → s3[*,2] (same order)
+                    // s3[*,2] → s6[*,0] (REVERSED order - bottom to back)
+                    // s6[*,0] → s2[*,2] (REVERSED order - back to top)
+                    // s2[*,2] → s1[*,2] (same order)
+                    setCol("s1", colIndex, temp2) // F gets U (top to front, same order)
+                    setCol("s2", colIndex, temp6) // U gets B (back to top, temp6 already in front perspective)
+                    setCol("s6", s6ColIndex, temp3.reversed()) // B gets D (bottom to back, REVERSED for storage)
+                    setCol("s3", colIndex, temp1) // D gets F (front to bottom, same order)
+                }
+            }
         }
 
-        // Rotate perpendicular faces
+        // Rotate perpendicular faces (left or right face)
         when (colIndex) {
             0 -> if (rotateUp) rotateFaceCounterClockwise("s4") else rotateFaceClockwise("s4")
             2 -> if (rotateUp) rotateFaceClockwise("s5") else rotateFaceCounterClockwise("s5")
