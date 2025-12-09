@@ -1,5 +1,9 @@
 package com.cs407.cubemaster.solver
 
+import java.io.DataInputStream
+import java.io.InputStream
+import java.util.zip.GZIPInputStream
+
 /**
  * Pruning tables for Kociemba's algorithm.
  *
@@ -193,4 +197,101 @@ object PruningTables {
     }
 
     fun isInitialized(): Boolean = initialized
+
+
+    /**
+     * Load pruning tables from a compressed or uncompressed binary file
+     * File format matches TableGenerator.saveTables()
+     * This loads both move and pruning tables from the same stream
+     * 
+     * @param inputStream The input stream to read from
+     * @param isCompressed Whether the stream is GZIP compressed (true) or raw binary (false)
+     */
+    fun loadFromStream(inputStream: InputStream, isCompressed: Boolean = true): Boolean {
+        try {
+            val dataStream = if (isCompressed) {
+                DataInputStream(GZIPInputStream(inputStream))
+            } else {
+                DataInputStream(inputStream)
+            }
+            
+            dataStream.use { input ->
+                // Read and verify magic number
+                val magic = input.readInt()
+                if (magic != 0x4B4F4349) { // "KOCI"
+                    SolverLog.e("PruningTables", "Invalid magic number: 0x${magic.toString(16)}")
+                    return false
+                }
+                
+                // Read version
+                val version = input.readInt()
+                if (version != 1) {
+                    SolverLog.e("PruningTables", "Unsupported version: $version")
+                    return false
+                }
+                
+                SolverLog.d("PruningTables", "Loading move tables...")
+                // Load move tables first
+                if (!MoveTables.loadFromStreamInternal(input)) {
+                    SolverLog.e("PruningTables", "Failed to load move tables")
+                    return false
+                }
+                SolverLog.d("PruningTables", "Move tables loaded successfully")
+                
+                // Load pruning tables
+                SolverLog.d("PruningTables", "Loading pruning tables...")
+                // Phase 1 twist-flip pruning [2187 * 2048]
+                val phase1TwistFlipSize = input.readInt()
+                if (phase1TwistFlipSize != 2187 * 2048) {
+                    SolverLog.e("PruningTables", "Invalid phase1TwistFlip size: $phase1TwistFlipSize, expected ${2187 * 2048}")
+                    return false
+                }
+                input.readFully(phase1TwistFlipPruning)
+                SolverLog.d("PruningTables", "Phase 1 twist-flip pruning loaded")
+                
+                // Phase 1 slice-twist pruning [495 * 2187]
+                val phase1SliceTwistSize = input.readInt()
+                if (phase1SliceTwistSize != 495 * 2187) {
+                    SolverLog.e("PruningTables", "Invalid phase1SliceTwist size: $phase1SliceTwistSize, expected ${495 * 2187}")
+                    return false
+                }
+                input.readFully(phase1SliceTwistPruning)
+                SolverLog.d("PruningTables", "Phase 1 slice-twist pruning loaded")
+                
+                // Phase 2 corner-edge pruning [40320 * 8]
+                val phase2CornerEdgeSize = input.readInt()
+                if (phase2CornerEdgeSize != 40320 * 8) {
+                    SolverLog.e("PruningTables", "Invalid phase2CornerEdge size: $phase2CornerEdgeSize, expected ${40320 * 8}")
+                    return false
+                }
+                input.readFully(phase2CornerEdgePruning)
+                SolverLog.d("PruningTables", "Phase 2 corner-edge pruning loaded")
+                
+                // Phase 2 corner-slice pruning [40320 * 24]
+                val phase2CornerSliceSize = input.readInt()
+                if (phase2CornerSliceSize != 40320 * 24) {
+                    SolverLog.e("PruningTables", "Invalid phase2CornerSlice size: $phase2CornerSliceSize, expected ${40320 * 24}")
+                    return false
+                }
+                input.readFully(phase2CornerSlicePruning)
+                SolverLog.d("PruningTables", "Phase 2 corner-slice pruning loaded")
+                
+                initialized = true
+                SolverLog.d("PruningTables", "All tables loaded successfully from file")
+                return true
+            }
+        } catch (e: Exception) {
+            SolverLog.e("PruningTables", "Exception loading from stream: ${e.message}")
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    /**
+     * Getter methods for TableGenerator compatibility
+     */
+    fun getPhase1TwistFlipPruning(): ByteArray = phase1TwistFlipPruning
+    fun getPhase1SliceTwistPruning(): ByteArray = phase1SliceTwistPruning
+    fun getPhase2CornerEdgePruning(): ByteArray = phase2CornerEdgePruning
+    fun getPhase2CornerSlicePruning(): ByteArray = phase2CornerSlicePruning
 }

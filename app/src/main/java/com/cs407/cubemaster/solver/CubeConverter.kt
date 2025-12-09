@@ -105,15 +105,24 @@ object CubeConverter {
         // Define corner positions and their facelet indices
         // Using Kociemba standard: U(0-8), R(9-17), F(18-26), D(27-35), L(36-44), B(45-53)
         // Face layout: 0 1 2 / 3 4 5 / 6 7 8
+        // Facelet index = row * 3 + col
+        // 
+        // Transformations applied during scanning:
+        // - Top face (s2): Vertical flip (row 0 ↔ row 2) - row 0 = Back, row 2 = Front
+        // - Bottom face (s3): 90° clockwise rotation - row 0 = Front, row 2 = Back
+        // - Back face (s6): Horizontal flip (col 0 ↔ col 2) - col 0 = Left, col 2 = Right
+        // - Side faces: No transformation needed
+        //
+        // Corner indices (after transformations):
         val cornerFacelets = arrayOf(
-            intArrayOf(8, 9, 20),    // 0: URF = U9 (my s2[2][2]), R1, F3
-            intArrayOf(6, 18, 38),   // 1: UFL = U7 (my s2[2][0]), F1, L3
-            intArrayOf(0, 36, 47),   // 2: ULB = U1 (my s2[0][0]), L1, B3
-            intArrayOf(2, 45, 11),   // 3: UBR = U3 (my s2[0][2]), B1, R3
-            intArrayOf(29, 26, 15),  // 4: DFR
-            intArrayOf(27, 44, 24),  // 5: DLF
-            intArrayOf(33, 53, 42),  // 6: DBL
-            intArrayOf(35, 17, 51)   // 7: DRB
+            intArrayOf(8, 9, 20),    // 0: URF = U[8] (s2[2][2] bottom-right, connects to Front), R[9] (s5[0][0] top-left), F[20] (s1[2][2] bottom-right)
+            intArrayOf(6, 18, 38),   // 1: UFL = U[6] (s2[2][0] bottom-left, connects to Front), F[18] (s1[0][0] top-left), L[38] (s4[2][2] bottom-right)
+            intArrayOf(0, 36, 47),   // 2: ULB = U[0] (s2[0][0] top-left, connects to Back), L[36] (s4[0][0] top-left), B[47] (s6[2][2] bottom-right, after horizontal flip)
+            intArrayOf(2, 45, 11),   // 3: UBR = U[2] (s2[0][2] top-right, connects to Back), B[45] (s6[0][0] top-left, after horizontal flip), R[11] (s5[2][2] bottom-right)
+            intArrayOf(29, 26, 15),  // 4: DFR = D[29] (s3[1][2] middle-right, after 90° CW), F[26] (s1[2][2] bottom-right), R[15] (s5[1][2] middle-right)
+            intArrayOf(27, 44, 24),  // 5: DLF = D[27] (s3[0][0] top-left, after 90° CW, connects to Front), L[44] (s4[2][2] bottom-right), F[24] (s1[2][0] bottom-left)
+            intArrayOf(33, 53, 42),  // 6: DBL = D[33] (s3[1][0] middle-left, after 90° CW), B[53] (s6[2][2] bottom-right, after horizontal flip), L[42] (s4[1][0] middle-left)
+            intArrayOf(35, 17, 51)   // 7: DRB = D[35] (s3[2][2] bottom-right, after 90° CW, connects to Back), R[17] (s5[2][0] bottom-left), B[51] (s6[2][0] bottom-left, after horizontal flip)
         )
 
         // Expected colors for each corner in solved state (URF orientation)
@@ -129,12 +138,18 @@ object CubeConverter {
         )
 
         // Identify corners
+        val foundCorners = mutableSetOf<Int>()
         for (i in 0..7) {
             val faceletIndices = cornerFacelets[i]
+            val rawColors = intArrayOf(
+                facelets[faceletIndices[0]],
+                facelets[faceletIndices[1]],
+                facelets[faceletIndices[2]]
+            )
             val colors = charArrayOf(
-                colorToFace(facelets[faceletIndices[0]]),
-                colorToFace(facelets[faceletIndices[1]]),
-                colorToFace(facelets[faceletIndices[2]])
+                colorToFace(rawColors[0]),
+                colorToFace(rawColors[1]),
+                colorToFace(rawColors[2])
             )
 
             // Find which corner this is and its orientation
@@ -157,8 +172,12 @@ object CubeConverter {
                     }
                     
                     if (rotatedColors.contentEquals(expectedColors)) {
+                        if (j in foundCorners) {
+                            System.err.println("WARNING: Corner $j found at multiple positions! Position $i also maps to corner $j")
+                        }
                         cornerPermutation[i] = j
                         cornerOrientation[i] = orientation
+                        foundCorners.add(j)
                         found = true
                         break
                     }
@@ -167,8 +186,25 @@ object CubeConverter {
             }
             
             if (!found) {
-                System.err.println("Corner $i not found! Colors: ${colors.contentToString()}, Indices: ${faceletIndices.contentToString()}")
+                val errorMsg = "Corner $i not found! " +
+                        "Raw colors: [${rawColors.joinToString()}], " +
+                        "Mapped colors: [${colors.joinToString()}], " +
+                        "Facelet indices: [${faceletIndices.joinToString()}], " +
+                        "Facelet values: [${faceletIndices.map { facelets[it] }.joinToString()}]"
+                System.err.println(errorMsg)
+                throw IllegalStateException("Cannot identify corner at position $i. This usually means:\n" +
+                        "1. The cube scan has invalid/unrecognized colors\n" +
+                        "2. The color mapping is incorrect\n" +
+                        "3. The facelet indices are wrong\n" +
+                        "Details: $errorMsg")
             }
+        }
+        
+        // Verify all corners were found
+        if (foundCorners.size != 8) {
+            val missing = (0..7).filter { it !in foundCorners }
+            throw IllegalStateException("Not all corners were identified! Missing corners: $missing. " +
+                    "This indicates the cube state is invalid or the scan is incorrect.")
         }
 
         // Indices of facelets for each edge

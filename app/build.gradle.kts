@@ -30,6 +30,27 @@ android {
             )
         }
     }
+    
+    packaging {
+        resources {
+            // Don't compress .gz files since they're already compressed
+            // This prevents Android from double-compressing already-compressed files
+            // Note: Assets in assets/ folder are typically not compressed by default,
+            // but this ensures .gz files are handled correctly
+            excludes += listOf("META-INF/**")
+        }
+    }
+    
+    // Ensure assets are included in the build
+    // Note: After adding files to assets/, you may need to:
+    // 1. Clean the project (Build -> Clean Project)
+    // 2. Rebuild the project (Build -> Rebuild Project)
+    // 3. Uninstall and reinstall the app on your device/emulator
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("src/main/assets")
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

@@ -1,5 +1,9 @@
 package com.cs407.cubemaster.solver
 
+import java.io.DataInputStream
+import java.io.InputStream
+import java.util.zip.GZIPInputStream
+
 /**
  * Pre-computed move tables for Kociemba's algorithm.
  *
@@ -184,4 +188,149 @@ object MoveTables {
     }
 
     fun isInitialized(): Boolean = initialized
+
+    /**
+     * Load tables from a compressed binary file
+     * File format matches TableGenerator.saveTables()
+     */
+    fun loadFromStream(inputStream: InputStream): Boolean {
+        try {
+            DataInputStream(GZIPInputStream(inputStream)).use { input ->
+                // Read and verify magic number
+                val magic = input.readInt()
+                if (magic != 0x4B4F4349) { // "KOCI"
+                    return false
+                }
+                
+                // Read version
+                val version = input.readInt()
+                if (version != 1) {
+                    return false
+                }
+                
+                return loadFromStreamInternal(input)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    /**
+     * Internal method to load move tables from an already-opened DataInputStream
+     * Assumes magic number and version have already been read
+     */
+    internal fun loadFromStreamInternal(input: DataInputStream): Boolean {
+        try {
+            // === Move Tables ===
+            
+            SolverLog.d("MoveTables", "Loading twist move table...")
+            // Twist move table [2187][18]
+            val twistRows = input.readInt()
+            val twistCols = input.readInt()
+            if (twistRows != 2187 || twistCols != 18) {
+                SolverLog.e("MoveTables", "Invalid twist table dimensions: $twistRows x $twistCols, expected 2187 x 18")
+                return false
+            }
+            for (i in 0 until twistRows) {
+                for (j in 0 until twistCols) {
+                    twistMoveTable[i][j] = input.readShort().toInt()
+                }
+            }
+            SolverLog.d("MoveTables", "Twist move table loaded")
+            
+            SolverLog.d("MoveTables", "Loading flip move table...")
+            // Flip move table [2048][18]
+            val flipRows = input.readInt()
+            val flipCols = input.readInt()
+            if (flipRows != 2048 || flipCols != 18) {
+                SolverLog.e("MoveTables", "Invalid flip table dimensions: $flipRows x $flipCols, expected 2048 x 18")
+                return false
+            }
+            for (i in 0 until flipRows) {
+                for (j in 0 until flipCols) {
+                    flipMoveTable[i][j] = input.readShort().toInt()
+                }
+            }
+            SolverLog.d("MoveTables", "Flip move table loaded")
+            
+            SolverLog.d("MoveTables", "Loading slice move table...")
+            // Slice move table [495][18]
+            val sliceRows = input.readInt()
+            val sliceCols = input.readInt()
+            if (sliceRows != 495 || sliceCols != 18) {
+                SolverLog.e("MoveTables", "Invalid slice table dimensions: $sliceRows x $sliceCols, expected 495 x 18")
+                return false
+            }
+            for (i in 0 until sliceRows) {
+                for (j in 0 until sliceCols) {
+                    sliceMoveTable[i][j] = input.readShort().toInt()
+                }
+            }
+            SolverLog.d("MoveTables", "Slice move table loaded")
+            
+            SolverLog.d("MoveTables", "Loading corner perm move table...")
+            // Corner perm move table [40320][10]
+            val cornerPermRows = input.readInt()
+            val cornerPermCols = input.readInt()
+            if (cornerPermRows != 40320 || cornerPermCols != 10) {
+                SolverLog.e("MoveTables", "Invalid corner perm table dimensions: $cornerPermRows x $cornerPermCols, expected 40320 x 10")
+                return false
+            }
+            for (i in 0 until cornerPermRows) {
+                for (j in 0 until cornerPermCols) {
+                    cornerPermMoveTable[i][j] = input.readInt()
+                }
+            }
+            SolverLog.d("MoveTables", "Corner perm move table loaded")
+            
+            SolverLog.d("MoveTables", "Loading UD edge perm move table...")
+            // UD edge perm move table [40320][10]
+            val udEdgePermRows = input.readInt()
+            val udEdgePermCols = input.readInt()
+            if (udEdgePermRows != 40320 || udEdgePermCols != 10) {
+                SolverLog.e("MoveTables", "Invalid UD edge perm table dimensions: $udEdgePermRows x $udEdgePermCols, expected 40320 x 10")
+                return false
+            }
+            for (i in 0 until udEdgePermRows) {
+                for (j in 0 until udEdgePermCols) {
+                    udEdgePermMoveTable[i][j] = input.readInt()
+                }
+            }
+            SolverLog.d("MoveTables", "UD edge perm move table loaded")
+            
+            SolverLog.d("MoveTables", "Loading slice sorted move table...")
+            // Slice sorted move table [24][10]
+            val sliceSortedRows = input.readInt()
+            val sliceSortedCols = input.readInt()
+            if (sliceSortedRows != 24 || sliceSortedCols != 10) {
+                SolverLog.e("MoveTables", "Invalid slice sorted table dimensions: $sliceSortedRows x $sliceSortedCols, expected 24 x 10")
+                return false
+            }
+            for (i in 0 until sliceSortedRows) {
+                for (j in 0 until sliceSortedCols) {
+                    sliceSortedMoveTable[i][j] = input.readShort().toInt()
+                }
+            }
+            SolverLog.d("MoveTables", "Slice sorted move table loaded")
+            
+            initialized = true
+            SolverLog.d("MoveTables", "All move tables loaded successfully")
+            return true
+        } catch (e: Exception) {
+            SolverLog.e("MoveTables", "Exception loading move tables: ${e.message}")
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    /**
+     * Getter methods for TableGenerator compatibility
+     */
+    fun getTwistMoveTable(): Array<IntArray> = twistMoveTable
+    fun getFlipMoveTable(): Array<IntArray> = flipMoveTable
+    fun getSliceMoveTable(): Array<IntArray> = sliceMoveTable
+    fun getCornerPermMoveTable(): Array<IntArray> = cornerPermMoveTable
+    fun getUDEdgePermMoveTable(): Array<IntArray> = udEdgePermMoveTable
+    fun getSliceSortedMoveTable(): Array<IntArray> = sliceSortedMoveTable
 }
