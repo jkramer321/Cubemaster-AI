@@ -33,11 +33,6 @@ object PruningTables {
         initialized = true
     }
 
-    fun forceInitialize() {
-        initialized = false
-        initialize()
-    }
-
     private fun initializePhase1Pruning() {
         // Initialize all distances to -1 (unknown)
         phase1TwistFlipPruning.fill(-1)
@@ -71,26 +66,19 @@ object PruningTables {
 
         // BFS for slice-twist pruning
         val queue2 = ArrayDeque<Pair<Int, Int>>()
-        val solvedSlice = CoordinateSystem.getSliceCoordinate(CubeState.solved())
-        val solvedTwist = CoordinateSystem.getTwistCoordinate(CubeState.solved())
-        queue2.add(Pair(solvedSlice, solvedTwist))
-        setPhase1SliceTwistDistance(solvedSlice, solvedTwist, 0)
+        queue2.add(Pair(0, 0)) // solved state
+        setPhase1SliceTwistDistance(0, 0, 0)
 
         while (queue2.isNotEmpty()) {
             val (slice, twist) = queue2.removeFirst()
             val dist = getPhase1SliceTwistDistance(slice, twist)
 
-            // Increase depth limit or remove it for full initialization
-            // For mobile, we might want to keep it reasonable, e.g., 8-9
-            // But for correctness, we need deeper tables.
-            // Let's try 12 for now to avoid timeout during initialization
-            if (dist >= 12) continue
+            if (dist >= 7) continue
 
             for (move in CubeMove.values()) {
                 val state = CubeState.solved()
                 CoordinateSystem.setTwistCoordinate(state, twist)
-                CoordinateSystem.setSliceCoordinate(state, slice)
-                
+                // Set slice coordinate (simplified)
                 val newState = state.applyMove(move)
                 val newSlice = CoordinateSystem.getSliceCoordinate(newState)
                 val newTwist = CoordinateSystem.getTwistCoordinate(newState)

@@ -15,8 +15,6 @@ package com.cs407.cubemaster.solver
  */
 object CoordinateSystem {
 
-    const val SOLVED_SLICE_COORDINATE = 494
-
     // Phase 1: Corner twist coordinate (0..2186)
     fun getTwistCoordinate(state: CubeState): Int {
         var coord = 0
@@ -60,7 +58,7 @@ object CoordinateSystem {
     // Phase 1: Slice coordinate - which 4 edges are in middle layer (0..494)
     fun getSliceCoordinate(state: CubeState): Int {
         var coord = 0
-        var k = 4
+        var k = 3
         for (i in 11 downTo 0) {
             if (state.edgePermutation[i] in 8..11) {
                 coord += binomial(i, k)
@@ -68,31 +66,6 @@ object CoordinateSystem {
             }
         }
         return coord
-    }
-
-    fun setSliceCoordinate(state: CubeState, coord: Int) {
-        val sliceEdges = intArrayOf(8, 9, 10, 11)
-        val otherEdges = intArrayOf(0, 1, 2, 3, 4, 5, 6, 7)
-        var sliceIdx = 0
-        var otherIdx = 0
-        var remaining = coord
-        var k = 4
-
-        // Reset edge permutation
-        for (i in 0..11) state.edgePermutation[i] = -1
-
-        for (i in 11 downTo 0) {
-            val binom = binomial(i, k)
-            if (k >= 1 && remaining >= binom) {
-                // Slice edge at position i
-                state.edgePermutation[i] = sliceEdges[sliceIdx++]
-                remaining -= binom
-                k--
-            } else {
-                // Non-slice edge at position i
-                state.edgePermutation[i] = otherEdges[otherIdx++]
-            }
-        }
     }
 
     // Phase 2: Corner permutation coordinate (0..40319)

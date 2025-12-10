@@ -104,58 +104,6 @@ data class CubeState(
         return true
     }
 
-    /**
-     * Verify if the cube state is valid.
-     * Checks:
-     * 1. Corner orientation sum % 3 == 0
-     * 2. Edge orientation sum % 2 == 0
-     * 3. Corner permutation is valid (contains 0-7)
-     * 4. Edge permutation is valid (contains 0-11)
-     * 5. Parity matches (corner parity == edge parity)
-     */
-    fun isValid(): Boolean {
-        // 1. Corner orientation sum
-        if (cornerOrientation.sum() % 3 != 0) return false
-
-        // 2. Edge orientation sum
-        if (edgeOrientation.sum() % 2 != 0) return false
-
-        // 3. Corner permutation
-        val corners = BooleanArray(8)
-        for (p in cornerPermutation) {
-            if (p < 0 || p > 7) return false
-            corners[p] = true
-        }
-        if (corners.any { !it }) return false
-
-        // 4. Edge permutation
-        val edges = BooleanArray(12)
-        for (p in edgePermutation) {
-            if (p < 0 || p > 11) return false
-            edges[p] = true
-        }
-        if (edges.any { !it }) return false
-
-        // 5. Parity check
-        // Calculate corner parity
-        var cornerParity = 0
-        for (i in 0 until 8) {
-            for (j in i + 1 until 8) {
-                if (cornerPermutation[i] > cornerPermutation[j]) cornerParity++
-            }
-        }
-
-        // Calculate edge parity
-        var edgeParity = 0
-        for (i in 0 until 12) {
-            for (j in i + 1 until 12) {
-                if (edgePermutation[i] > edgePermutation[j]) edgeParity++
-            }
-        }
-
-        return (cornerParity % 2) == (edgeParity % 2)
-    }
-
     // Corner indices:
     // 0: URF, 1: UFL, 2: ULB, 3: UBR
     // 4: DFR, 5: DLF, 6: DBL, 7: DRB
@@ -166,23 +114,23 @@ data class CubeState(
     // 8: FR, 9: FL, 10: BL, 11: BR
 
     private fun applyU(state: CubeState) {
-        // Cycle corners: URF -> UFL -> ULB -> UBR -> URF
-        cycleFour(state.cornerPermutation, 0, 1, 2, 3)
-        cycleFour(state.cornerOrientation, 0, 1, 2, 3)
+        // Cycle corners: URF -> UBR -> ULB -> UFL -> URF
+        cycleFour(state.cornerPermutation, 0, 3, 2, 1)
+        cycleFour(state.cornerOrientation, 0, 3, 2, 1)
 
-        // Cycle edges: UR -> UF -> UL -> UB -> UR
-        cycleFour(state.edgePermutation, 0, 1, 2, 3)
-        cycleFour(state.edgeOrientation, 0, 1, 2, 3)
+        // Cycle edges: UR -> UB -> UL -> UF -> UR
+        cycleFour(state.edgePermutation, 0, 3, 2, 1)
+        cycleFour(state.edgeOrientation, 0, 3, 2, 1)
     }
 
     private fun applyD(state: CubeState) {
-        // Cycle corners: DFR -> DRB -> DBL -> DLF -> DFR
-        cycleFour(state.cornerPermutation, 4, 7, 6, 5)
-        cycleFour(state.cornerOrientation, 4, 7, 6, 5)
+        // Cycle corners: DFR -> DLF -> DBL -> DRB -> DFR
+        cycleFour(state.cornerPermutation, 4, 5, 6, 7)
+        cycleFour(state.cornerOrientation, 4, 5, 6, 7)
 
-        // Cycle edges: DR -> DB -> DL -> DF -> DR
-        cycleFour(state.edgePermutation, 4, 7, 6, 5)
-        cycleFour(state.edgeOrientation, 4, 7, 6, 5)
+        // Cycle edges: DR -> DF -> DL -> DB -> DR
+        cycleFour(state.edgePermutation, 4, 5, 6, 7)
+        cycleFour(state.edgeOrientation, 4, 5, 6, 7)
     }
 
     private fun applyR(state: CubeState) {
@@ -201,8 +149,8 @@ data class CubeState(
     }
 
     private fun applyL(state: CubeState) {
-        // Cycle corners: UFL -> DLF -> DBL -> ULB -> UFL
-        cycleFour(state.cornerPermutation, 1, 5, 6, 2)
+        // Cycle corners: UFL -> ULB -> DBL -> DLF -> UFL
+        cycleFour(state.cornerPermutation, 1, 2, 6, 5)
         // L move changes corner orientation: +2 for UFL/DBL, +1 for ULB/DLF
         val temp = state.cornerOrientation.clone()
         state.cornerOrientation[1] = (temp[5] + 1) % 3
@@ -210,28 +158,28 @@ data class CubeState(
         state.cornerOrientation[6] = (temp[2] + 1) % 3
         state.cornerOrientation[5] = (temp[6] + 2) % 3
 
-        // Cycle edges: UL -> BL -> DL -> FL -> UL
-        cycleFour(state.edgePermutation, 2, 10, 6, 9)
-        cycleFour(state.edgeOrientation, 2, 10, 6, 9)
+        // Cycle edges: UL -> FL -> DL -> BL -> UL
+        cycleFour(state.edgePermutation, 2, 9, 6, 10)
+        cycleFour(state.edgeOrientation, 2, 9, 6, 10)
     }
 
     private fun applyF(state: CubeState) {
-        // Cycle corners: URF -> DFR -> DLF -> UFL -> URF
-        cycleFour(state.cornerPermutation, 0, 4, 5, 1)
+        // Cycle corners: URF -> UFL -> DLF -> DFR -> URF
+        cycleFour(state.cornerPermutation, 0, 1, 5, 4)
         // F move changes corner orientation: +1 for URF/DLF, +2 for UFL/DFR
         val temp = state.cornerOrientation.clone()
-        state.cornerOrientation[0] = (temp[1] + 1) % 3
-        state.cornerOrientation[1] = (temp[5] + 2) % 3
-        state.cornerOrientation[5] = (temp[4] + 1) % 3
-        state.cornerOrientation[4] = (temp[0] + 2) % 3
+        state.cornerOrientation[0] = (temp[4] + 1) % 3
+        state.cornerOrientation[1] = (temp[0] + 2) % 3
+        state.cornerOrientation[5] = (temp[1] + 1) % 3
+        state.cornerOrientation[4] = (temp[5] + 2) % 3
 
-        // Cycle edges: UF -> FL -> DF -> FR -> UF (and flip them)
-        cycleFour(state.edgePermutation, 1, 9, 5, 8)
+        // Cycle edges: UF -> FR -> DF -> FL -> UF (and flip them)
+        cycleFour(state.edgePermutation, 1, 8, 5, 9)
         val tempEdge = state.edgeOrientation.clone()
-        state.edgeOrientation[1] = (tempEdge[8] + 1) % 2
-        state.edgeOrientation[8] = (tempEdge[5] + 1) % 2
-        state.edgeOrientation[5] = (tempEdge[9] + 1) % 2
-        state.edgeOrientation[9] = (tempEdge[1] + 1) % 2
+        state.edgeOrientation[1] = (tempEdge[9] + 1) % 2
+        state.edgeOrientation[8] = (tempEdge[1] + 1) % 2
+        state.edgeOrientation[5] = (tempEdge[8] + 1) % 2
+        state.edgeOrientation[9] = (tempEdge[5] + 1) % 2
     }
 
     private fun applyB(state: CubeState) {
