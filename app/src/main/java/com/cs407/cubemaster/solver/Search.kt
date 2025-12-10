@@ -128,27 +128,42 @@ object Search {
      * Determine if a move should be skipped based on the last move
      * Skip redundant moves like R R, R R', or out-of-order opposite faces
      */
-    private fun shouldSkipMove(move: CubeMove, lastMove: CubeMove?): Boolean {
-        if (lastMove == null) return false
+    private fun shouldSkipMove(move: CubeMove, last: CubeMove?): Boolean {
+        if (last == null) return false
 
-        val moveFace = getFace(move)
-        val lastFace = getFace(lastMove)
+        val f1 = move.notation[0]
+        val f2 = last.notation[0]
 
-        // Don't do same face twice in a row
-        if (moveFace == lastFace) return true
+        // 1. Don't repeat the same face (R, R2, R' etc)
+        if (f1 == f2) return true
 
-        // Don't do opposite faces out of canonical order
-        // Canonical order: (U before D), (R before L), (F before B)
-        val opposites = mapOf(
-            'D' to 'U',
-            'L' to 'R',
-            'B' to 'F'
-        )
+        // 2. Don't move on same axis as last move unless it's the "other" face.
+        // (ex: R->L, L->R are allowed, but R->R' is already eliminated above)
+        val a1 = axisOf(f1)
+        val a2 = axisOf(f2)
 
-        if (opposites[moveFace] == lastFace) return true
+        if (a1 == a2) {
+            // They are on the same axis.
+            // Allowed only if they are exact opposite faces: (R,L), (U,D), (F,B)
+            return !isOpposite(f1, f2)
+        }
 
         return false
     }
+
+    private fun axisOf(face: Char): Int =
+        when(face) {
+            'U','D' -> 0
+            'R','L' -> 1
+            'F','B' -> 2
+            else -> -1
+        }
+
+    private fun isOpposite(a: Char, b: Char): Boolean =
+        (a == 'R' && b == 'L') || (a == 'L' && b == 'R') ||
+                (a == 'U' && b == 'D') || (a == 'D' && b == 'U') ||
+                (a == 'F' && b == 'B') || (a == 'B' && b == 'F')
+
 
     private fun getFace(move: CubeMove): Char {
         return move.notation[0]

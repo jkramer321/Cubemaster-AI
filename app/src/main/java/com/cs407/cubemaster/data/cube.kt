@@ -207,60 +207,71 @@ data class Cube(val s1: MutableList<MutableList<Int>>,
     }
 
     fun rotateDepth(depthIndex: Int, rotateClockwise: Boolean) {
-        // Rotate a depth layer (for F/B moves)
-        // depthIndex: 0 = Front (s1), 2 = Back (s6)
-        
-        // Save current values
-        val temp2 = getRow("s2", 2).toList()  // U bottom row
-        val temp3 = getRow("s3", 0).toList()  // D top row
-        val temp4 = getCol("s4", 2).toList()  // L RIGHT column (col 2) - F affects this column
-        val temp5 = getCol("s5", 0).toList()  // R LEFT column (col 0) - F affects this column
 
         if (depthIndex == 0) {
-            // F move: U bottom -> R left (from R's view) -> D top (reversed) -> L right (from L's view) -> U bottom
+            //
+            // ------------------  F / F'  ------------------
+            //
+            // Edges:  UF -> FL -> DF -> FR -> UF
+            //
+
+            val U = getRow("s2", 2).toList()
+            val D = getRow("s3", 0).toList()
+            val L = getCol("s4", 2).toList()
+            val R = getCol("s5", 0).toList()
+
             if (rotateClockwise) {
-                // F move (clockwise)
-                setCol("s5", 0, temp2)  // R left <- U bottom
-                setRow("s3", 0, temp5.reversed())  // D top <- R left (reversed)
-                setCol("s4", 2, temp3)  // L right <- D top
-                setRow("s2", 2, temp4.reversed())  // U bottom <- L right (reversed)
+                // UF → FL → DF → FR → UF
+                setCol("s4", 2, U)       // FL <- UF
+                setRow("s3", 0, L)       // DF <- FL
+                setCol("s5", 0, D)       // FR <- DF
+                setRow("s2", 2, R)       // UF <- FR
+
                 rotateFaceClockwise("s1")
+
             } else {
-                // F' move (counter-clockwise)
-                // Reverse cycle: U bottom -> L right (reversed) -> D top -> R left (reversed) -> U bottom
-                setCol("s4", 2, temp2.reversed())  // L right <- U bottom (reversed)
-                setRow("s3", 0, temp4)  // D top <- L right
-                setCol("s5", 0, temp3.reversed())  // R left <- D top (reversed)
-                setRow("s2", 2, temp5)  // U bottom <- R left
+                // UF → FR → DF → FL → UF
+                setCol("s5", 0, U)       // FR <- UF
+                setRow("s3", 0, R)       // DF <- FR
+                setCol("s4", 2, D)       // FL <- DF
+                setRow("s2", 2, L)       // UF <- FL
+
                 rotateFaceCounterClockwise("s1")
             }
-        } else {
-            // B move: U top -> R right -> D bottom -> L left -> U top
-            // (cycling in opposite direction from F because viewing from back)
-            val tempU = getRow("s2", 0).toList()  // U top row
-            val tempD = getRow("s3", 2).toList()  // D bottom row
-            val tempL = getCol("s4", 0).toList()  // L left column
-            val tempR = getCol("s5", 2).toList()  // R right column
-            
+
+        } else if (depthIndex == 2) {
+            //
+            // ------------------  B / B'  ------------------
+            //
+            // Edges: UB -> BR -> DB -> BL -> UB
+            //
+
+            val U = getRow("s2", 0).toList()
+            val D = getRow("s3", 2).toList()
+            val L = getCol("s4", 0).toList()
+            val R = getCol("s5", 2).toList()
+
             if (rotateClockwise) {
-                // B move (clockwise when viewing from back)
-                // U top -> L left -> D bottom -> R right -> U top
-                setCol("s4", 0, tempU.reversed())  // L left <- U top (reversed)
-                setRow("s3", 2, tempL)  // D bottom <- L left
-                setCol("s5", 2, tempD.reversed())  // R right <- D bottom (reversed)
-                setRow("s2", 0, tempR)  // U top <- R right
+                // UB → BL → DB → BR → UB
+                setCol("s4", 0, U.reversed())   // BL <- UB
+                setRow("s3", 2, L)              // DB <- BL
+                setCol("s5", 2, D.reversed())   // BR <- DB
+                setRow("s2", 0, R)              // UB <- BR
+
                 rotateFaceClockwise("s6")
+
             } else {
-                // B' move (counter-clockwise)
-                // Reverse cycle: U top -> R right (rev) -> D bottom -> L left (rev) -> U top
-                setCol("s5", 2, tempU.reversed())  // R right <- U top (reversed)
-                setRow("s3", 2, tempR)  // D bottom <- R right
-                setCol("s4", 0, tempD.reversed())  // L left <- D bottom (reversed)
-                setRow("s2", 0, tempL)  // U top <- L left
+                // UB → BR → DB → BL → UB
+                setCol("s5", 2, U.reversed())   // BR <- UB
+                setRow("s3", 2, R)              // DB <- BR
+                setCol("s4", 0, D.reversed())   // BL <- DB
+                setRow("s2", 0, L)              // UB <- BL
+
                 rotateFaceCounterClockwise("s6")
             }
         }
     }
+
 
     fun freeze(): Cube {
         return Cube(

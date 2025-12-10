@@ -262,15 +262,15 @@ object CubeConverter {
             "L'" -> cube.rotateCol(0, true)
             "L2" -> { cube.rotateCol(0, false); cube.rotateCol(0, false) }
 
-            // F moves (rotate front)
-            "F" -> cube.rotateDepth(0, true)
-            "F'" -> cube.rotateDepth(0, false)
-            "F2" -> { cube.rotateDepth(0, true); cube.rotateDepth(0, true) }
+            // F moves (rotate front) - using custom implementation
+            "F" -> rotateFrontClockwise(cube)
+            "F'" -> rotateFrontCounterClockwise(cube)
+            "F2" -> { rotateFrontClockwise(cube); rotateFrontClockwise(cube) }
 
-            // B moves (rotate back)
-            "B" -> cube.rotateDepth(2, true)
-            "B'" -> cube.rotateDepth(2, false)
-            "B2" -> { cube.rotateDepth(2, true); cube.rotateDepth(2, true) }
+            // B moves (rotate back) - using custom implementation
+            "B" -> rotateBackClockwise(cube)
+            "B'" -> rotateBackCounterClockwise(cube)
+            "B2" -> { rotateBackClockwise(cube); rotateBackClockwise(cube) }
         }
     }
 
@@ -287,7 +287,9 @@ object CubeConverter {
      * - Bottom row of s2 -> Right column of s5 -> Top row of s3 -> Left column of s4 -> Bottom row of s2
      */
     private fun rotateFrontClockwise(cube: Cube) {
-        // Rotate s1 face clockwise
+        // Rotate s1 face counter-clockwise (3x clockwise = 1x counter-clockwise)
+        rotateFaceClockwise(cube, "s1")
+        rotateFaceClockwise(cube, "s1")
         rotateFaceClockwise(cube, "s1")
 
         // Save the affected edges
@@ -304,31 +306,32 @@ object CubeConverter {
             cube.getCell("s4", 2, 2)
         )  // Right column of left (s4)
 
-        // Cycle: s2 bottom -> s5 left, s5 left -> s3 top, s3 top -> s4 right, s4 right -> s2 bottom
-        
-        // s2 bottom <- s4 right (reversed)
-        // L(0,2)->U(2,2), L(1,2)->U(2,1), L(2,2)->U(2,0)
-        cube.setCell("s2", 2, 0, temp4[2])
-        cube.setCell("s2", 2, 1, temp4[1])
-        cube.setCell("s2", 2, 2, temp4[0])
+        // FIXED: Cycle UF -> FL -> DF -> FR -> UF (was UF -> FR -> DF -> FL)
+        // FL gets UF, DF gets FL, FR gets DF, UF gets FR
 
-        // s5 left <- s2 bottom
-        // U(2,0)->R(0,0), U(2,1)->R(1,0), U(2,2)->R(2,0)
-        cube.setCell("s5", 0, 0, temp2[0])
-        cube.setCell("s5", 1, 0, temp2[1])
-        cube.setCell("s5", 2, 0, temp2[2])
+        // s4 right <- s2 bottom (reversed)
+        // U(2,2)->L(0,2), U(2,1)->L(1,2), U(2,0)->L(2,2)
+        cube.setCell("s4", 0, 2, temp2[2])
+        cube.setCell("s4", 1, 2, temp2[1])
+        cube.setCell("s4", 2, 2, temp2[0])
 
-        // s3 top <- s5 left (reversed)
-        // R(2,0)->D(0,0), R(1,0)->D(0,1), R(0,0)->D(0,2)
-        cube.setCell("s3", 0, 0, temp5[2])
-        cube.setCell("s3", 0, 1, temp5[1])
-        cube.setCell("s3", 0, 2, temp5[0])
+        // s3 top <- s4 right
+        // L(0,2)->D(0,0), L(1,2)->D(0,1), L(2,2)->D(0,2)
+        cube.setCell("s3", 0, 0, temp4[0])
+        cube.setCell("s3", 0, 1, temp4[1])
+        cube.setCell("s3", 0, 2, temp4[2])
 
-        // s4 right <- s3 top
-        // D(0,0)->L(0,2), D(0,1)->L(1,2), D(0,2)->L(2,2)
-        cube.setCell("s4", 0, 2, temp3[0])
-        cube.setCell("s4", 1, 2, temp3[1])
-        cube.setCell("s4", 2, 2, temp3[2])
+        // s5 left <- s3 top (reversed)
+        // D(0,2)->R(0,0), D(0,1)->R(1,0), D(0,0)->R(2,0)
+        cube.setCell("s5", 0, 0, temp3[2])
+        cube.setCell("s5", 1, 0, temp3[1])
+        cube.setCell("s5", 2, 0, temp3[0])
+
+        // s2 bottom <- s5 left
+        // R(0,0)->U(2,0), R(1,0)->U(2,1), R(2,0)->U(2,2)
+        cube.setCell("s2", 2, 0, temp5[0])
+        cube.setCell("s2", 2, 1, temp5[1])
+        cube.setCell("s2", 2, 2, temp5[2])
     }
 
     private fun rotateFrontCounterClockwise(cube: Cube) {
@@ -359,8 +362,9 @@ object CubeConverter {
             cube.getCell("s5", 2, 2)
         )  // Right column of right (s5)
 
-        // Cycle: s2 top -> s4 left, s4 left -> s3 bottom, s3 bottom -> s5 right, s5 right -> s2 top
-        
+        // FIXED: Cycle UB -> BL -> DB -> BR -> UB (edges 3 -> 10 -> 7 -> 11)
+        // BL gets UB, DB gets BL, BR gets DB, UB gets BR
+
         // s4 left <- s2 top (Reversed)
         // U(0,2)->L(0,0), U(0,1)->L(1,0), U(0,0)->L(2,0)
         cube.setCell("s4", 0, 0, temp2[2])
