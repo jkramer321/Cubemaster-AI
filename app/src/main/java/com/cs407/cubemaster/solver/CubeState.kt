@@ -279,6 +279,14 @@ data class CubeState(
     }
 
     companion object {
+        fun solved(): CubeState {
+            return CubeState(
+                cornerPermutation = intArrayOf(0,1,2,3,4,5,6,7),
+                cornerOrientation = IntArray(8) { 0 },
+                edgePermutation = intArrayOf(0,1,2,3,4,5,6,7,8,9,10,11),
+                edgeOrientation = IntArray(12) { 0 }
+            )
+        }
         private val cornerColorTable = arrayOf(
             intArrayOf(5, 2, 0), // URF
             intArrayOf(5, 0, 3), // UFL
