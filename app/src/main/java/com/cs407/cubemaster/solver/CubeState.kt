@@ -279,33 +279,160 @@ data class CubeState(
     }
 
     companion object {
+        private val cornerColorTable = arrayOf(
+            intArrayOf(5, 2, 0), // URF
+            intArrayOf(5, 0, 3), // UFL
+            intArrayOf(5, 3, 4), // ULB
+            intArrayOf(5, 4, 2), // UBR
+            intArrayOf(1, 0, 2), // DFR
+            intArrayOf(1, 3, 0), // DLF
+            intArrayOf(1, 4, 3), // DBL
+            intArrayOf(1, 2, 4)  // DRB
+        )
+
+        // Edge definitions (color pairs)
+        private val edgeColorTable = arrayOf(
+            intArrayOf(5, 2), // UR
+            intArrayOf(5, 0), // UF
+            intArrayOf(5, 3), // UL
+            intArrayOf(5, 4), // UB
+            intArrayOf(1, 2), // DR
+            intArrayOf(1, 0), // DF
+            intArrayOf(1, 3), // DL
+            intArrayOf(1, 4), // DB
+            intArrayOf(0, 2), // FR
+            intArrayOf(0, 3), // FL
+            intArrayOf(4, 3), // BL
+            intArrayOf(4, 2)  // BR
+        )
+
         /**
-         * Create a solved cube state
+         * Extract a corner’s 3 colors from a given position (x,y,z)
          */
-        fun solved(): CubeState {
-            return CubeState(
-                cornerPermutation = intArrayOf(0, 1, 2, 3, 4, 5, 6, 7),
-                cornerOrientation = intArrayOf(0, 0, 0, 0, 0, 0, 0, 0),
-                edgePermutation = intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
-                edgeOrientation = intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-            )
+        private fun getCornerColors(c: Cube, x: Int, y: Int, z: Int): IntArray {
+            val colors = mutableListOf<Int>()
+
+            if (z == +1) colors += c.s1[1 - y][x + 1] // front
+            if (z == -1) colors += c.s6[1 - y][1 - (x + 1)] // back (mirrored X)
+
+            if (y == +1) colors += c.s2[1 - z][x + 1] // top
+            if (y == -1) colors += c.s3[z + 1][x + 1] // bottom
+
+            if (x == -1) colors += c.s4[1 - y][1 - z] // left
+            if (x == +1) colors += c.s5[1 - y][z + 1] // right
+
+            return colors.toIntArray()
         }
 
         /**
-         * Convert from the app's Cube representation to Kociemba's coordinate system
-         *
-         * The app uses:
-         * s1: Front, s2: Top, s3: Bottom, s4: Left, s5: Right, s6: Back
-         *
-         * We need to map the facelets to corner/edge pieces and their orientations
+         * Extract an edge’s 2 colors
          */
-        fun fromCube(cube: Cube): CubeState {
-            // This is a complex mapping that needs to read the cube's facelets
-            // and determine which piece is in each position and its orientation
+        private fun getEdgeColors(c: Cube, x: Int, y: Int, z: Int): IntArray {
+            val colors = mutableListOf<Int>()
 
-            // For now, return a placeholder - will implement the full conversion
-            // This requires identifying each piece by its color combination
-            return solved()
+            if (z == +1) colors += c.s1[1 - y][x + 1]
+            if (z == -1) colors += c.s6[1 - y][1 - (x + 1)]
+
+            if (y == +1) colors += c.s2[1 - z][x + 1]
+            if (y == -1) colors += c.s3[z + 1][x + 1]
+
+            if (x == -1) colors += c.s4[1 - y][1 - z]
+            if (x == +1) colors += c.s5[1 - y][z + 1]
+
+            return colors.toIntArray()
+        }
+
+        /**
+         * Convert from the app’s Cube representation to Kociemba’s coordinate system.
+         */
+        fun fromCube(c: Cube): CubeState {
+            val cp = IntArray(8)
+            val co = IntArray(8)
+            val ep = IntArray(12)
+            val eo = IntArray(12)
+
+            // Corner coordinates (Kociemba order)
+            val cornerPositions = arrayOf(
+                intArrayOf(+1, +1, +1), // URF
+                intArrayOf(-1, +1, +1), // UFL
+                intArrayOf(-1, +1, -1), // ULB
+                intArrayOf(+1, +1, -1), // UBR
+                intArrayOf(+1, -1, +1), // DFR
+                intArrayOf(-1, -1, +1), // DLF
+                intArrayOf(-1, -1, -1), // DBL
+                intArrayOf(+1, -1, -1)  // DRB
+            )
+
+            // IDENTIFY CORNER PERMUTATION + ORIENTATION
+            for (i in 0 until 8) {
+                val (x, y, z) = cornerPositions[i]
+                val colors = getCornerColors(c, x, y, z) // always gives 3 colors
+
+                val sorted = colors.sorted()
+                val id = cornerColorTable.indexOfFirst { it.sorted() == sorted }
+                cp[i] = id
+
+                // Correct corner orientation
+                val corner = cornerColorTable[id]
+
+                val uColor = 5  // Yellow = U
+                val dColor = 1  // Red    = D
+
+                val idxUorD = colors.indexOfFirst { it == uColor || it == dColor }
+
+                // Orientation depends on which axis the U/D color belongs on
+                co[i] = when {
+                    colors[idxUorD] == corner[0] -> 0
+                    colors[idxUorD] == corner[1] -> 1
+                    else -> 2
+                }
+            }
+
+            // Edge coordinates (Kociemba order)
+            val edgePositions = arrayOf(
+                intArrayOf(+1, +1, 0), // UR
+                intArrayOf(0, +1, +1), // UF
+                intArrayOf(-1, +1, 0), // UL
+                intArrayOf(0, +1, -1), // UB
+                intArrayOf(+1, -1, 0), // DR
+                intArrayOf(0, -1, +1), // DF
+                intArrayOf(-1, -1, 0), // DL
+                intArrayOf(0, -1, -1), // DB
+                intArrayOf(+1, 0, +1), // FR
+                intArrayOf(-1, 0, +1), // FL
+                intArrayOf(-1, 0, -1), // BL
+                intArrayOf(+1, 0, -1)  // BR
+            )
+
+            // IDENTIFY EDGE PERMUTATION + ORIENTATION
+            for (i in 0 until 12) {
+                val (x, y, z) = edgePositions[i]
+                val colors = getEdgeColors(c, x, y, z)
+
+                val sorted = colors.sorted()
+                val id = edgeColorTable.indexOfFirst { it.sorted() == sorted }
+                ep[i] = id
+
+                val edge = edgeColorTable[id]
+
+                val uColor = 5
+                val dColor = 1
+                val fColor = 0
+                val bColor = 4
+
+                eo[i] = when {
+                    // U/D edges
+                    (i <= 3 || i in 4..7) -> {
+                        if (colors.indexOf(uColor) == 0 || colors.indexOf(dColor) == 0) 0 else 1
+                    }
+                    // F/B edges
+                    else -> {
+                        if (colors.indexOf(fColor) == 0 || colors.indexOf(bColor) == 0) 0 else 1
+                    }
+                }
+            }
+
+            return CubeState(cp, co, ep, eo)
         }
     }
 }

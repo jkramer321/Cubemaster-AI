@@ -62,7 +62,7 @@ class KociembaSolver {
         }
 
         // Convert app's Cube to CubeState
-        val cubeState = CubeConverter.fromCube(cube)
+        val cubeState = CubeState.fromCube(cube)
 
         SolverLog.d("KociembaSolver", "Starting Phase 1 search...")
         val phase1Solution = Search.searchPhase1(cubeState, maxPhase1Depth)
@@ -116,7 +116,7 @@ class KociembaSolver {
         if (!isInitialized) return@withContext -1
         if (cube.isSolved()) return@withContext 0
 
-        val cubeState = CubeConverter.fromCube(cube)
+        val cubeState = CubeState.fromCube(cube)
         val coord1 = CoordinateSystem.Phase1Coordinate.from(cubeState)
         val coord2 = CoordinateSystem.Phase2Coordinate.from(cubeState)
 

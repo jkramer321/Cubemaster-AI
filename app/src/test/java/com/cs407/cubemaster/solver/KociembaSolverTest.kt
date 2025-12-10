@@ -37,10 +37,11 @@ class KociembaSolverTest {
     fun testCoordinates() {
         val state = CubeState.solved()
 
-        // Solved state should have coordinate 0
+        // Solved state should have coordinate 0 for twist and flip
         assertEquals(0, CoordinateSystem.getTwistCoordinate(state))
         assertEquals(0, CoordinateSystem.getFlipCoordinate(state))
-        assertEquals(0, CoordinateSystem.getSliceCoordinate(state))
+        // Slice coordinate is 494 for solved state (edges 8-11 in positions 8-11)
+        assertEquals(CoordinateSystem.SOLVED_SLICE_COORDINATE, CoordinateSystem.getSliceCoordinate(state))
     }
 
     private fun createSolvedCube(): Cube {
