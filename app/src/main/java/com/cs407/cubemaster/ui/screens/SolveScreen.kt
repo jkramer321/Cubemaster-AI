@@ -47,6 +47,7 @@ import com.cs407.cubemaster.R
 import com.cs407.cubemaster.data.Cube
 import com.cs407.cubemaster.data.CubeHolder
 import com.cs407.cubemaster.solver.KociembaSolver
+import com.cs407.cubemaster.solver.SolverLog
 import com.cs407.cubemaster.ui.components.Interactive3DCube
 import com.cs407.cubemaster.ui.components.performMove
 import com.cs407.cubemaster.ui.theme.DarkOrange
@@ -109,7 +110,8 @@ fun SolveScreen(navController: NavController) {
         scope.launch {
             try {
                 isLoading = true
-                solver.initialize()
+                solver.initialize { name -> runCatching { context.assets.open(name) }.getOrNull() }
+                SolverLog.d("SolveScreen", "Solver init source=${solver.lastInitSource()}")
 
                 val cube = CubeHolder.scannedCube
                 if (cube != null) {

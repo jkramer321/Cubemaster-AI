@@ -57,6 +57,7 @@ import com.cs407.cubemaster.ui.components.FrameCaptureCallback
 import com.cs407.cubemaster.ui.theme.CubemasterTheme
 import com.cs407.cubemaster.ui.theme.DarkOrange
 import com.cs407.cubemaster.ui.theme.LightOrange
+import com.cs407.cubemaster.solver.SolverLog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -73,7 +74,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     var scanSession by remember { mutableStateOf(ScanSession()) }
     var frameCaptureCallback by remember { mutableStateOf<FrameCaptureCallback?>(null) }
     // DEBUG: RGB color values extracted from camera frame - uncomment assignments/usage to enable RGB debug display
-    // var previewRgbColors by remember { mutableStateOf<Array<Array<com.cs407.cubemaster.ml.ColorGrouper.RGBColor>>?>(null) }
+    var previewRgbColors by remember { mutableStateOf<Array<Array<com.cs407.cubemaster.ml.ColorGrouper.RGBColor>>?>(null) }
     var previewColors by remember { mutableStateOf<Array<IntArray>?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -134,7 +135,7 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                                 val colorCodes = colorClassifier.classifyGrid(rgbGrid)
                                 withContext(Dispatchers.Main) {
                                     // DEBUG: Store RGB colors for potential debugging (currently not displayed in UI)
-                                    // previewRgbColors = rgbGrid
+                                    previewRgbColors = rgbGrid
                                     previewColors = colorCodes
                                     scanSession = scanSession.showPreview()
                                     isProcessing = false
@@ -165,6 +166,22 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
         val currentFace = scanSession.getCurrentFace()
         if (currentFace != null && previewColors != null) {
             val mappedColors = faceMapper.mapToCubeFace(previewColors!!, currentFace.cubeSide)
+            val faceOffset = when (currentFace.cubeSide) {
+                "s1" -> 0
+                "s2" -> 9
+                "s3" -> 18
+                "s4" -> 27
+                "s5" -> 36
+                "s6" -> 45
+                else -> -1
+            }
+            val mappedPreview = mappedColors.joinToString(" | ") { row ->
+                row.joinToString(",")
+            }
+            SolverLog.d(
+                "ScanScreen",
+                "Mapped ${currentFace.cubeSide} -> startIdx=$faceOffset values=$mappedPreview"
+            )
             // Convert Array<IntArray> to Array<Array<Int>>
             val colorsArray = Array(3) { row ->
                 Array(3) { col ->
@@ -174,7 +191,8 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
             val updatedSession = scanSession.addScannedFace(currentFace.cubeSide, colorsArray)
             scanSession = updatedSession.moveToNextFace()
             previewColors = null
-            // DEBUG: previewRgbColors = null
+            // DEBUG:
+            previewRgbColors = null
             
             // Clear the frame capture callback - the new CameraPreview will provide a fresh one
             // This prevents using a stale callback from the previous CameraPreview instance
@@ -191,7 +209,8 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
     // Handle rescan button click
     val onRescanClick: () -> Unit = {
         previewColors = null
-        // DEBUG: previewRgbColors = null
+        // DEBUG:
+        previewRgbColors = null
         isProcessing = false
         scanSession = scanSession.rescanCurrentFace()
     }
@@ -247,13 +266,13 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
                             contentAlignment = Alignment.Center
                         ) {
                             ColorPreviewGrid(colors = previewColors!!)
-                            // DEBUG: Uncomment below to show RGB debug grid instead of simple color preview
-                            // if (previewRgbColors != null) {
-                            //     DebugColorPreviewGrid(
-                            //         rgbColors = previewRgbColors!!,
-                            //         classifiedColors = previewColors!!
-                            //     )
-                            // }
+//                             // DEBUG: Uncomment below to show RGB debug grid instead of simple color preview
+//                             if (previewRgbColors != null) {
+//                                 DebugColorPreviewGrid(
+//                                     rgbColors = previewRgbColors!!,
+//                                     classifiedColors = previewColors!!
+//                                 )
+//                             }
                         }
                     }
 
@@ -435,14 +454,15 @@ fun ColorPreviewGrid(colors: Array<IntArray>) {
             ) {
                 for (col in 0..2) {
                     val colorCode = colors[row][col]
+                    // Canonical URFDLB: 0=White/U, 1=Red/R, 2=Green/F, 3=Yellow/D, 4=Orange/L, 5=Blue/B
                     val color = when (colorCode) {
-                        0 -> Color.White      // White
-                        1 -> Color.Red        // Red
-                        2 -> Color.Blue       // Blue
-                        3 -> Color(0xFFFF9800) // Orange
-                        4 -> Color.Green     // Green
-                        5 -> Color.Yellow     // Yellow
-                        else -> Color.Gray   // Unknown
+                        0 -> Color.White
+                        1 -> Color.Red
+                        2 -> Color.Green
+                        3 -> Color.Yellow
+                        4 -> Color(0xFFFF9800) // Orange
+                        5 -> Color.Blue
+                        else -> Color.Gray
                     }
                     Box(
                         modifier = Modifier
@@ -482,13 +502,14 @@ fun DebugColorPreviewGrid(
                     val actualColor = Color(rgb.r, rgb.g, rgb.b)
                     val classifiedCode = classifiedColors[row][col]
                     
+                    // Canonical letter codes: U,R,F,D,L,B
                     val classifiedColorName = when (classifiedCode) {
-                        0 -> "W"
-                        1 -> "R"
-                        2 -> "B"
-                        3 -> "O"
-                        4 -> "G"
-                        5 -> "Y"
+                        0 -> "W" // Up
+                        1 -> "R" // Right
+                        2 -> "G" // Front
+                        3 -> "Y" // Down
+                        4 -> "O" // Left
+                        5 -> "B" // Back
                         else -> "?"
                     }
                     
