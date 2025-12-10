@@ -100,10 +100,10 @@ fun ScanScreen(modifier: Modifier = Modifier, navController: NavController) {
         }
     }
 
-    // Auto-enable flash when scanning starts for consistent brightness
+    // Start with flash off for scanning, can cause unnecessary glare.
     LaunchedEffect(scanSession.currentState) {
         if (scanSession.currentState == ScanState.SCANNING_FACE) {
-            flashEnabled = true
+            flashEnabled = false
         }
     }
 
