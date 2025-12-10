@@ -3,6 +3,10 @@ package com.cs407.cubemaster.ui.screens
 import androidx.annotation.StringRes
 import com.cs407.cubemaster.R
 import com.cs407.cubemaster.data.Cube
+import com.cs407.cubemaster.solver.CubeConverter
+import android.util.Log
+
+private const val DEBUG_TAG = "CubeDebug"
 
 /**
  * Represents the current state of the scanning process
@@ -50,6 +54,31 @@ data class ScanSession(
     val scannedFaces: Map<String, Array<Array<Int>>> = emptyMap()
 ) {
     /**
+     * Normalize scanned faces to canonical sides using center colors.
+     * Canonical mapping (URFDLB colors): 0=U(s2), 1=R(s5), 2=F(s1), 3=D(s3), 4=L(s4), 5=B(s6).
+     */
+    private fun remapByCenter(): Map<String, Array<Array<Int>>> {
+        val byCenter = mutableMapOf<Int, Array<Array<Int>>>()
+        scannedFaces.values.forEach { face ->
+            val center = face[1][1]
+            byCenter[center] = face
+        }
+
+        logCenterSummary(byCenter)
+
+        fun faceOrEmpty(color: Int): Array<Array<Int>> =
+            byCenter[color] ?: Array(3) { Array(3) { 0 } }
+
+        return mapOf(
+            "s2" to faceOrEmpty(0), // Up
+            "s5" to faceOrEmpty(1), // Right
+            "s1" to faceOrEmpty(2), // Front
+            "s3" to faceOrEmpty(3), // Down
+            "s4" to faceOrEmpty(4), // Left
+            "s6" to faceOrEmpty(5)  // Back
+        )
+    }
+    /**
      * Get the current face being scanned
      */
     fun getCurrentFace(): FaceOrder? {
@@ -82,20 +111,19 @@ data class ScanSession(
      * Unscanned faces are initialized with zeros
      */
     fun buildCube(): Cube {
-        val s1 = scannedFaces["s1"]?.map { it.toMutableList() }?.toMutableList()
-            ?: MutableList(3) { MutableList(3) { 0 } }
-        val s2 = scannedFaces["s2"]?.map { it.toMutableList() }?.toMutableList()
-            ?: MutableList(3) { MutableList(3) { 0 } }
-        val s3 = scannedFaces["s3"]?.map { it.toMutableList() }?.toMutableList()
-            ?: MutableList(3) { MutableList(3) { 0 } }
-        val s4 = scannedFaces["s4"]?.map { it.toMutableList() }?.toMutableList()
-            ?: MutableList(3) { MutableList(3) { 0 } }
-        val s5 = scannedFaces["s5"]?.map { it.toMutableList() }?.toMutableList()
-            ?: MutableList(3) { MutableList(3) { 0 } }
-        val s6 = scannedFaces["s6"]?.map { it.toMutableList() }?.toMutableList()
-            ?: MutableList(3) { MutableList(3) { 0 } }
+        val canonical = remapByCenter()
+        debugRemap("ScanSession.buildCube", canonical)
 
-        return Cube(s1, s2, s3, s4, s5, s6)
+        val s1 = canonical["s1"]!!.map { it.toMutableList() }.toMutableList()
+        val s2 = canonical["s2"]!!.map { it.toMutableList() }.toMutableList()
+        val s3 = canonical["s3"]!!.map { it.toMutableList() }.toMutableList()
+        val s4 = canonical["s4"]!!.map { it.toMutableList() }.toMutableList()
+        val s5 = canonical["s5"]!!.map { it.toMutableList() }.toMutableList()
+        val s6 = canonical["s6"]!!.map { it.toMutableList() }.toMutableList()
+
+        val cube = Cube(s1, s2, s3, s4, s5, s6)
+        selfCheckSolvedParity(canonical)
+        return cube
     }
 
     /**
@@ -105,6 +133,38 @@ data class ScanSession(
         val updatedFaces = scannedFaces.toMutableMap()
         updatedFaces[faceSide] = colors
         return this.copy(scannedFaces = updatedFaces)
+    }
+
+    /**
+     * Snapshot facelets in solver order U(0-8), R(9-17), F(18-26), D(27-35), L(36-44), B(45-53).
+     * Missing faces are filled with zeros.
+     */
+    fun faceletsSnapshot(): IntArray {
+        val facelets = IntArray(54)
+
+        val remapped = remapByCenter()
+        debugRemap("ScanSession.snapshot", remapped)
+
+        fun writeFace(side: String, destStart: Int) {
+            val face = remapped[side] ?: return
+            var idx = 0
+            for (r in 0..2) {
+                for (c in 0..2) {
+                    facelets[destStart + idx] = face[r][c]
+                    idx++
+                }
+            }
+        }
+
+        // Map from our sides to solver order
+        writeFace("s2", 0)   // U
+        writeFace("s5", 9)   // R
+        writeFace("s1", 18)  // F
+        writeFace("s3", 27)  // D
+        writeFace("s4", 36)  // L
+        writeFace("s6", 45)  // B
+
+        return facelets
     }
 
     /**
@@ -144,5 +204,59 @@ data class ScanSession(
     fun rescanCurrentFace(): ScanSession {
         return this.copy(currentState = ScanState.SCANNING_FACE)
     }
+
+    private fun debugRemap(tag: String, faces: Map<String, Array<Array<Int>>>) {
+        fun faceStr(side: String) = faces[side]?.joinToString(" | ") { it.joinToString(",") } ?: "missing"
+        val msg = buildString {
+            appendLine("$tag remap ->")
+            appendLine("U(s2): ${faceStr("s2")}")
+            appendLine("R(s5): ${faceStr("s5")}")
+            appendLine("F(s1): ${faceStr("s1")}")
+            appendLine("D(s3): ${faceStr("s3")}")
+            appendLine("L(s4): ${faceStr("s4")}")
+            appendLine("B(s6): ${faceStr("s6")}")
+        }
+        try { Log.d(DEBUG_TAG, msg) } catch (_: Exception) {}
+        println(msg)
+    }
+
+    private fun logCenterSummary(byCenter: Map<Int, Array<Array<Int>>>) {
+        val seen = byCenter.keys.sorted()
+        val msg = "Center summary: seen=${seen.joinToString()} expected=[0,1,2,3,4,5]"
+        try { Log.d(DEBUG_TAG, msg) } catch (_: Exception) {}
+        println(msg)
+    }
+
+    /**
+     * Quick parity/self-check: verify solver facelets build a valid CubeState.
+     * Logs hints when CO/EO sums are off, which usually indicates a mirrored face.
+     */
+    private fun selfCheckSolvedParity(remapped: Map<String, Array<Array<Int>>>) {
+        val facelets = faceletsSnapshot()
+        val slice = { start: Int -> facelets.slice(start until start + 9).joinToString(",") }
+        val summary = """
+            Facelets snapshot U,R,F,D,L,B:
+            U: [${slice(0)}]
+            R: [${slice(9)}]
+            F: [${slice(18)}]
+            D: [${slice(27)}]
+            L: [${slice(36)}]
+            B: [${slice(45)}]
+        """.trimIndent()
+        try { Log.d(DEBUG_TAG, summary) } catch (_: Exception) {}
+        println(summary)
+
+        try {
+            val state = CubeConverter.fromFacelets(facelets)
+            val okMsg = "Self-check: CubeState valid (CO sum=${state.cornerOrientation.sum()}, EO sum=${state.edgeOrientation.sum()})"
+            try { Log.d(DEBUG_TAG, okMsg) } catch (_: Exception) {}
+            println(okMsg)
+        } catch (e: Exception) {
+            val errMsg = "Self-check: invalid cube state. Likely mirrored/rotated face. Details=${e.message}"
+            try { Log.e(DEBUG_TAG, errMsg, e) } catch (_: Exception) {}
+            println(errMsg)
+        }
+    }
+
 }
 

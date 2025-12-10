@@ -1,10 +1,19 @@
 package com.cs407.cubemaster.ml
 
+import android.util.Log
+
+private const val DEBUG_TAG = "CubeDebug"
+
 /**
  * Maps scanned 3×3 grid to the correct Cube face orientation
  * Handles face-specific coordinate transformations based on scanning perspective
  */
 class FaceMapper {
+    init {
+        val expected = "Expected label order: 0=Up/white, 1=Right/red, 2=Front/green, 3=Down/yellow, 4=Left/orange, 5=Back/blue"
+        try { Log.d(DEBUG_TAG, "FaceMapper: $expected") } catch (_: Exception) {}
+        println("FaceMapper: $expected")
+    }
     
     /**
      * Map a scanned 3×3 grid to a Cube face
@@ -15,7 +24,7 @@ class FaceMapper {
      * @return 3×3 array of color codes in the correct orientation for the Cube data structure
      */
     fun mapToCubeFace(scannedGrid: Array<IntArray>, faceSide: String): Array<IntArray> {
-        return when (faceSide) {
+        val mapped = when (faceSide) {
             "s1" -> mapFrontFace(scannedGrid)      // Front
             "s2" -> mapTopFace(scannedGrid)         // Top
             "s3" -> mapBottomFace(scannedGrid)       // Bottom
@@ -24,73 +33,35 @@ class FaceMapper {
             "s6" -> mapBackFace(scannedGrid)       // Back
             else -> scannedGrid // Default: no transformation
         }
+        debugFace("FaceMapper", faceSide, mapped)
+        return mapped
     }
     
-    /**
-     * Front face (s1): Direct mapping
-     * Row 0 = top, Row 2 = bottom
-     * Col 0 = left, Col 2 = right
-     */
-    private fun mapFrontFace(grid: Array<IntArray>): Array<IntArray> {
-        return grid.map { it.clone() }.toTypedArray()
-    }
-    
-    /**
-     * Right face (s5): Standard mapping
-     * When scanning from front, right face is viewed from the side
-     * Row 0 = top, Row 2 = bottom
-     * Col 0 = front edge, Col 2 = back edge
-     */
-    private fun mapRightFace(grid: Array<IntArray>): Array<IntArray> {
-        return grid.map { it.clone() }.toTypedArray()
-    }
-    
-    /**
-     * Back face (s6): Direct mapping
-     * The 3D renderer (getCubieColors) already handles column mirroring with `1 - x`
-     * so we don't apply any transformation here to avoid double reversal
-     */
-    private fun mapBackFace(grid: Array<IntArray>): Array<IntArray> {
-        return grid.map { it.clone() }.toTypedArray()
-    }
-    
-    /**
-     * Left face (s4): Standard mapping
-     * Row 0 = top, Row 2 = bottom
-     * Col 0 = back edge, Col 2 = front edge
-     */
-    private fun mapLeftFace(grid: Array<IntArray>): Array<IntArray> {
-        return grid.map { it.clone() }.toTypedArray()
-    }
-    
-    /**
-     * Top face (s2): Row reversal to compensate for 3D renderer mapping
-     * The 3D renderer (getCubieColors) maps rows opposite to Cube_Reference:
-     * - Renderer: Row 0 → z=+1 (front), Row 2 → z=-1 (back)
-     * - Reference: Row 0 = z=-1 (back), Row 2 = z=+1 (front)
-     * So we reverse rows here to compensate
-     */
-    private fun mapTopFace(grid: Array<IntArray>): Array<IntArray> {
-        return Array(3) { row ->
-            IntArray(3) { col ->
-                grid[2 - row][col] // Reverse rows only
+    private fun mapFrontFace(grid: Array<IntArray>): Array<IntArray> = grid.map { it.clone() }.toTypedArray()
+    private fun mapRightFace(grid: Array<IntArray>): Array<IntArray> =
+        grid.map { it.clone() }.toTypedArray()
+    // Back: no mirroring; renderer handles back-face orientation
+    private fun mapBackFace(grid: Array<IntArray>): Array<IntArray> =
+        grid.map { it.clone() }.toTypedArray()
+    private fun mapLeftFace(grid: Array<IntArray>): Array<IntArray> =
+        grid.map { it.clone() }.toTypedArray()
+    // Top: no row flip (align with renderer canonical)
+    private fun mapTopFace(grid: Array<IntArray>): Array<IntArray> =
+        grid.map { it.clone() }.toTypedArray()
+    // Bottom: no row flip
+    private fun mapBottomFace(grid: Array<IntArray>): Array<IntArray> =
+        grid.map { it.clone() }.toTypedArray()
+
+    private fun debugFace(tag: String, side: String, face: Array<IntArray>) {
+        val msg = buildString {
+            append("Mapped face ").append(side).append(": ")
+            for (r in 0..2) {
+                append(face[r].joinToString(",", prefix = "[", postfix = "]"))
+                if (r < 2) append(" | ")
             }
         }
-    }
-    
-    /**
-     * Bottom face (s3): Row reversal to compensate for 3D renderer mapping
-     * The 3D renderer (getCubieColors) maps rows opposite to Cube_Reference:
-     * - Renderer: Row 0 → z=-1 (back), Row 2 → z=+1 (front)
-     * - Reference: Row 0 = z=+1 (front), Row 2 = z=-1 (back)
-     * So we reverse rows here to compensate
-     */
-    private fun mapBottomFace(grid: Array<IntArray>): Array<IntArray> {
-        return Array(3) { row ->
-            IntArray(3) { col ->
-                grid[2 - row][col] // Reverse rows only
-            }
-        }
+        try { Log.d(DEBUG_TAG, "$tag: $msg") } catch (_: Exception) {}
+        println(msg)
     }
 }
 
