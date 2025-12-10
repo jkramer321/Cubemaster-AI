@@ -37,7 +37,7 @@ object Search {
         lastMove: CubeMove?
     ): Boolean {
         // Check if we've reached G1 subgroup
-        if (coord.twist == 0 && coord.flip == 0 && coord.slice == 0) {
+        if (coord.twist == 0 && coord.flip == 0 && coord.slice == CoordinateSystem.SOLVED_SLICE_COORDINATE) {
             return true
         }
 

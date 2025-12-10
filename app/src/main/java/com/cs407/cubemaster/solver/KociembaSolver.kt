@@ -27,14 +27,14 @@ class KociembaSolver {
     suspend fun initialize() = withContext(Dispatchers.Default) {
         if (isInitialized) return@withContext
 
-        Log.d("KociembaSolver", "Initializing move tables...")
+        SolverLog.d("KociembaSolver", "Initializing move tables...")
         MoveTables.initialize()
 
-        Log.d("KociembaSolver", "Initializing pruning tables...")
+        SolverLog.d("KociembaSolver", "Initializing pruning tables...")
         PruningTables.initialize()
 
         isInitialized = true
-        Log.d("KociembaSolver", "Solver initialized successfully")
+        SolverLog.d("KociembaSolver", "Solver initialized successfully")
     }
 
     /**
@@ -52,25 +52,25 @@ class KociembaSolver {
         maxPhase2Depth: Int = 18
     ): List<String>? = withContext(Dispatchers.Default) {
         if (!isInitialized) {
-            Log.e("KociembaSolver", "Solver not initialized. Call initialize() first.")
+            SolverLog.e("KociembaSolver", "Solver not initialized. Call initialize() first.")
             return@withContext null
         }
 
         if (cube.isSolved()) {
-            Log.d("KociembaSolver", "Cube is already solved")
+            SolverLog.d("KociembaSolver", "Cube is already solved")
             return@withContext emptyList()
         }
 
         // Convert app's Cube to CubeState
         val cubeState = CubeConverter.fromCube(cube)
 
-        Log.d("KociembaSolver", "Starting Phase 1 search...")
+        SolverLog.d("KociembaSolver", "Starting Phase 1 search...")
         val phase1Solution = Search.searchPhase1(cubeState, maxPhase1Depth)
         if (phase1Solution == null) {
-            Log.e("KociembaSolver", "Phase 1 search failed")
+            SolverLog.e("KociembaSolver", "Phase 1 search failed")
             return@withContext null
         }
-        Log.d("KociembaSolver", "Phase 1 complete: ${phase1Solution.size} moves")
+        SolverLog.d("KociembaSolver", "Phase 1 complete: ${phase1Solution.size} moves")
 
         // Apply Phase 1 moves
         var intermediateState = cubeState
@@ -78,20 +78,20 @@ class KociembaSolver {
             intermediateState = intermediateState.applyMove(move)
         }
 
-        Log.d("KociembaSolver", "Starting Phase 2 search...")
+        SolverLog.d("KociembaSolver", "Starting Phase 2 search...")
         val phase2Solution = Search.searchPhase2(intermediateState, maxPhase2Depth)
         if (phase2Solution == null) {
-            Log.e("KociembaSolver", "Phase 2 search failed")
+            SolverLog.e("KociembaSolver", "Phase 2 search failed")
             return@withContext null
         }
-        Log.d("KociembaSolver", "Phase 2 complete: ${phase2Solution.size} moves")
+        SolverLog.d("KociembaSolver", "Phase 2 complete: ${phase2Solution.size} moves")
 
         // Combine and simplify
         val fullSolution = phase1Solution + phase2Solution
         val simplified = Search.simplifySolution(fullSolution)
 
-        Log.d("KociembaSolver", "Solution found: ${simplified.size} moves")
-        Log.d("KociembaSolver", "Moves: ${Search.formatSolution(simplified)}")
+        SolverLog.d("KociembaSolver", "Solution found: ${simplified.size} moves")
+        SolverLog.d("KociembaSolver", "Moves: ${Search.formatSolution(simplified)}")
 
         return@withContext simplified.map { it.notation }
     }
