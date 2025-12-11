@@ -71,17 +71,48 @@ object Search {
      */
     fun searchPhase2(
         state: CubeState,
-        maxDepth: Int = 18
+        maxDepth: Int = 18,
+        maxTimeMs: Long = 80_000
     ): List<CubeMove>? {
         if (state.isSolved()) return emptyList()
 
         val coord = CoordinateSystem.Phase2Coordinate.from(state)
         val solution = mutableListOf<CubeMove>()
+        val nodesCounter = intArrayOf(0)
+        val visited = HashMap<CoordinateSystem.Phase2Coordinate, Int>(100_000)
+        val timeBudgetNs = maxTimeMs * 1_000_000
+        val startTime = System.nanoTime()
+        val timedOut = booleanArrayOf(false)
 
         // IDA*: iteratively increase depth limit
         for (depth in 1..maxDepth) {
             solution.clear()
-            if (searchPhase2Recursive(coord, 0, depth, solution, null)) {
+            nodesCounter[0] = 0
+            visited.clear()
+
+            val iterStart = System.nanoTime()
+            val found = searchPhase2Recursive(
+                coord = coord,
+                currentDepth = 0,
+                maxDepth = depth,
+                solution = solution,
+                lastMove = null,
+                nodesCounter = nodesCounter,
+                visited = visited,
+                startTimeNs = startTime,
+                timeBudgetNs = timeBudgetNs,
+                timedOut = timedOut
+            )
+            val elapsedMs = (System.nanoTime() - iterStart) / 1_000_000
+            SolverLog.d(
+                "Search",
+                "Phase2 depth=$depth nodes=${nodesCounter[0]} elapsed=${elapsedMs}ms coord=$coord"
+            )
+            if (timedOut[0]) {
+                SolverLog.e("Search", "Phase2 timed out at depth=$depth after ${elapsedMs}ms")
+                return null
+            }
+            if (found) {
                 return solution
             }
         }
@@ -94,8 +125,31 @@ object Search {
         currentDepth: Int,
         maxDepth: Int,
         solution: MutableList<CubeMove>,
-        lastMove: CubeMove?
+        lastMove: CubeMove?,
+        nodesCounter: IntArray,
+        visited: HashMap<CoordinateSystem.Phase2Coordinate, Int>,
+        startTimeNs: Long,
+        timeBudgetNs: Long,
+        timedOut: BooleanArray
     ): Boolean {
+        // Time budget guard
+        if (System.nanoTime() - startTimeNs > timeBudgetNs) {
+            timedOut[0] = true
+            return false
+        }
+
+        nodesCounter[0]++
+
+        // Transposition cutoff: skip if we've seen this coordinate at an equal or shallower depth
+        val prevDepth = visited[coord]
+        if (prevDepth != null && prevDepth <= currentDepth) {
+            return false
+        }
+        if (visited.size > PHASE2_VISITED_LIMIT) {
+            visited.clear()
+        }
+        visited[coord] = currentDepth
+
         // Check if solved
         if (coord.cornerPerm == 0 && coord.udEdgePerm == 0 && coord.sliceSorted == 0) {
             return true
@@ -104,25 +158,62 @@ object Search {
         // Prune if we can't reach goal in remaining moves
         val estimate = PruningTables.getPhase2Distance(coord)
         if (currentDepth + estimate > maxDepth) {
+            if (currentDepth == 0) {
+                SolverLog.d(
+                    "Search",
+                    "Phase2 prune at root: estimate=$estimate maxDepth=$maxDepth coord=$coord"
+                )
+            }
             return false
         }
 
-        // Try only Phase 2 moves
+        // Build candidate moves with best-first heuristic to create best-first ordering for IDA*
+        // In this case, "best" means the move that gets us that much closer to the goal than the others.
+        val candidates = ArrayList<MoveCandidate>(CubeMove.PHASE2_MOVES.size)
         for (move in CubeMove.PHASE2_MOVES) {
             if (shouldSkipMove(move, lastMove)) continue
-
             val newCoord = MoveTables.applyMovePhase2(coord, move)
-            solution.add(move)
+            val h = PruningTables.getPhase2Distance(newCoord)
+            candidates.add(MoveCandidate(move, newCoord, h))
+        }
+        candidates.sortBy { currentDepth + 1 + it.heuristic }
 
-            if (searchPhase2Recursive(newCoord, currentDepth + 1, maxDepth, solution, move)) {
+        // Try only Phase 2 moves in best-first order
+        for (candidate in candidates) {
+            val nextDepth = currentDepth + 1
+            solution.add(candidate.move)
+
+            if (searchPhase2Recursive(
+                    candidate.coord,
+                    nextDepth,
+                    maxDepth,
+                    solution,
+                    candidate.move,
+                    nodesCounter,
+                    visited,
+                    startTimeNs,
+                    timeBudgetNs,
+                    timedOut
+                )
+            ) {
                 return true
             }
+
+            if (timedOut[0]) return false
 
             solution.removeAt(solution.size - 1)
         }
 
         return false
     }
+
+    private const val PHASE2_VISITED_LIMIT = 1_000_000_000
+
+    private data class MoveCandidate(
+        val move: CubeMove,
+        val coord: CoordinateSystem.Phase2Coordinate,
+        val heuristic: Int
+    )
 
     /**
      * Determine if a move should be skipped based on the last move

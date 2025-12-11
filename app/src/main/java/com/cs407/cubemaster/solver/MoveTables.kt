@@ -1,5 +1,14 @@
 package com.cs407.cubemaster.solver
 
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
+
 /**
  * Pre-computed move tables for Kociemba's algorithm.
  *
@@ -8,6 +17,9 @@ package com.cs407.cubemaster.solver
  * maintaining the full cube state.
  */
 object MoveTables {
+
+    private const val MOVE_TABLE_MAGIC = 0x4D54424C // 'MTBL'
+    private const val MOVE_TABLE_VERSION = 1
 
     // Phase 1 move tables
     private val twistMoveTable = Array(2187) { IntArray(18) }
@@ -32,6 +44,55 @@ object MoveTables {
         initializePhase2Tables()
 
         initialized = true
+    }
+
+    fun exportBinary(out: OutputStream, compress: Boolean = true) {
+        if (!initialized) {
+            initialize()
+        }
+        val stream: OutputStream = if (compress) {
+            GZIPOutputStream(BufferedOutputStream(out))
+        } else {
+            BufferedOutputStream(out)
+        }
+        DataOutputStream(stream).use { data ->
+            data.writeInt(MOVE_TABLE_MAGIC)
+            data.writeInt(MOVE_TABLE_VERSION)
+
+            writeTable(data, twistMoveTable)
+            writeTable(data, flipMoveTable)
+            writeTable(data, sliceMoveTable)
+            writeTable(data, cornerPermMoveTable)
+            writeTable(data, udEdgePermMoveTable)
+            writeTable(data, sliceSortedMoveTable)
+        }
+    }
+
+    fun importBinary(input: InputStream, compressed: Boolean = true): Boolean {
+        return try {
+            val stream: InputStream = if (compressed) {
+                GZIPInputStream(BufferedInputStream(input))
+            } else {
+                BufferedInputStream(input)
+            }
+            DataInputStream(stream).use { data ->
+                if (data.readInt() != MOVE_TABLE_MAGIC) return false
+                val version = data.readInt()
+                if (version != MOVE_TABLE_VERSION) return false
+
+                if (!readTable(data, twistMoveTable)) return false
+                if (!readTable(data, flipMoveTable)) return false
+                if (!readTable(data, sliceMoveTable)) return false
+                if (!readTable(data, cornerPermMoveTable)) return false
+                if (!readTable(data, udEdgePermMoveTable)) return false
+                if (!readTable(data, sliceSortedMoveTable)) return false
+            }
+            initialized = true
+            true
+        } catch (_: Exception) {
+            initialized = false
+            false
+        }
     }
 
     fun forceInitialize() {
@@ -184,4 +245,26 @@ object MoveTables {
     }
 
     fun isInitialized(): Boolean = initialized
+
+    private fun writeTable(data: DataOutputStream, table: Array<IntArray>) {
+        data.writeInt(table.size)
+        data.writeInt(table[0].size)
+        for (row in table) {
+            for (value in row) {
+                data.writeInt(value)
+            }
+        }
+    }
+
+    private fun readTable(data: DataInputStream, table: Array<IntArray>): Boolean {
+        val rows = data.readInt()
+        val cols = data.readInt()
+        if (rows != table.size || cols != table[0].size) return false
+        for (i in 0 until rows) {
+            for (j in 0 until cols) {
+                table[i][j] = data.readInt()
+            }
+        }
+        return true
+    }
 }

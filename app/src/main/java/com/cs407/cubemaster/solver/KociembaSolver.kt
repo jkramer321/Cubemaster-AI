@@ -2,6 +2,7 @@ package com.cs407.cubemaster.solver
 
 import android.util.Log
 import com.cs407.cubemaster.data.Cube
+import com.cs407.cubemaster.solver.TableAssetLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -18,23 +19,39 @@ import kotlinx.coroutines.withContext
 class KociembaSolver {
 
     private var isInitialized = false
+    @Volatile
+    private var initSource: String = "none"
 
     /**
      * Initialize the solver (generate move and pruning tables)
      * This should be called once when the app starts
-     * Takes several seconds to complete
+     * Takes several seconds to complete when generating
      */
-    suspend fun initialize() = withContext(Dispatchers.Default) {
+    suspend fun initialize(openAsset: ((String) -> java.io.InputStream?)? = null) = withContext(Dispatchers.Default) {
         if (isInitialized) return@withContext
 
-        SolverLog.d("KociembaSolver", "Initializing move tables...")
-        MoveTables.initialize()
+        var loadedFromAssets = false
+        if (openAsset != null) {
+            loadedFromAssets = TableAssetLoader.loadAll(openAsset)
+            if (!loadedFromAssets) {
+                SolverLog.e("KociembaSolver", "Failed to load tables from assets; falling back to generation")
+            }
+        }
 
-        SolverLog.d("KociembaSolver", "Initializing pruning tables...")
-        PruningTables.initialize()
+        if (!loadedFromAssets) {
+            SolverLog.d("KociembaSolver", "Initializing move tables...")
+            MoveTables.initialize()
+
+            SolverLog.d("KociembaSolver", "Initializing pruning tables...")
+            PruningTables.initialize()
+            initSource = "generated"
+        } else {
+            SolverLog.d("KociembaSolver", "Loaded tables from assets")
+            initSource = "assets"
+        }
 
         isInitialized = true
-        SolverLog.d("KociembaSolver", "Solver initialized successfully")
+        SolverLog.d("KociembaSolver", "Solver initialized successfully (source=$initSource)")
     }
 
     /**
@@ -64,6 +81,9 @@ class KociembaSolver {
         // Convert app's Cube to CubeState
         val cubeState = CubeConverter.fromCube(cube)
 
+        logStateDiagnostics(cubeState, "solve-entry")
+        CoordinateSystem.logCoordinates(cubeState, "solve-entry", force = true)
+
         SolverLog.d("KociembaSolver", "Starting Phase 1 search...")
         val phase1Solution = Search.searchPhase1(cubeState, maxPhase1Depth)
         if (phase1Solution == null) {
@@ -76,6 +96,14 @@ class KociembaSolver {
         var intermediateState = cubeState
         for (move in phase1Solution) {
             intermediateState = intermediateState.applyMove(move)
+        }
+
+        logStateDiagnostics(intermediateState, "pre-phase2")
+        CoordinateSystem.logCoordinates(intermediateState, "pre-phase2", force = true)
+
+        if (!intermediateState.isInG1()) {
+            SolverLog.e("KociembaSolver", "Phase 1 result is not in G1; aborting Phase 2")
+            return@withContext null
         }
 
         SolverLog.d("KociembaSolver", "Starting Phase 2 search...")
@@ -101,6 +129,8 @@ class KociembaSolver {
      */
     fun isReady(): Boolean = isInitialized
 
+    fun lastInitSource(): String = initSource
+
     /**
      * Format a solution into a readable string
      */
@@ -124,5 +154,32 @@ class KociembaSolver {
         val phase2Estimate = PruningTables.getPhase2Distance(coord2)
 
         return@withContext phase1Estimate + phase2Estimate
+    }
+
+    /**
+     * Emit validity, parity, and orientation diagnostics for a given state.
+     */
+    private fun logStateDiagnostics(state: CubeState, label: String) {
+        val cornerOriSum = state.cornerOrientation.sum() % 3
+        val edgeOriSum = state.edgeOrientation.sum() % 2
+        val cornerParity = permutationParity(state.cornerPermutation)
+        val edgeParity = permutationParity(state.edgePermutation)
+
+        SolverLog.d(
+            "KociembaSolver",
+            "[$label] valid=${state.isValid()} g1=${state.isInG1()} " +
+                    "cornerOriSum=$cornerOriSum edgeOriSum=$edgeOriSum " +
+                    "cornerParity=$cornerParity edgeParity=$edgeParity"
+        )
+    }
+
+    private fun permutationParity(arr: IntArray): Int {
+        var swaps = 0
+        for (i in arr.indices) {
+            for (j in i + 1 until arr.size) {
+                if (arr[i] > arr[j]) swaps++
+            }
+        }
+        return swaps % 2
     }
 }

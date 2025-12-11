@@ -1,5 +1,14 @@
 package com.cs407.cubemaster.solver
 
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
+
 /**
  * Pruning tables for Kociemba's algorithm.
  *
@@ -9,6 +18,10 @@ package com.cs407.cubemaster.solver
  */
 object PruningTables {
 
+    private const val PRUNE_TABLE_MAGIC = 0x5052554E // 'PRUN'
+    // Bump version because we are adding a new Phase 2 pruning table.
+    private const val PRUNE_TABLE_VERSION = 2
+
     // Phase 1 pruning tables
     // Store minimum distance to goal for each coordinate combination
     private val phase1TwistFlipPruning = ByteArray(2187 * 2048)
@@ -17,8 +30,14 @@ object PruningTables {
     // Phase 2 pruning tables
     private val phase2CornerEdgePruning = ByteArray(40320 * 8) // Simplified - full table would be huge
     private val phase2CornerSlicePruning = ByteArray(40320 * 24)
+    private val phase2UDEdgeSlicePruning = ByteArray(40320 * 24)
 
     private var initialized = false
+
+    // Depth limits for BFS initialization (kept moderate for mobile; admissible heuristics)
+    private const val PHASE1_TWIST_FLIP_LIMIT = 7
+    private const val PHASE1_SLICE_TWIST_LIMIT = 12
+    private const val PHASE2_LIMIT = 12
 
     /**
      * Initialize all pruning tables using BFS
@@ -31,6 +50,53 @@ object PruningTables {
         initializePhase2Pruning()
 
         initialized = true
+    }
+
+    fun exportBinary(out: OutputStream, compress: Boolean = true) {
+        if (!initialized) {
+            initialize()
+        }
+        val stream: OutputStream = if (compress) {
+            GZIPOutputStream(BufferedOutputStream(out))
+        } else {
+            BufferedOutputStream(out)
+        }
+        DataOutputStream(stream).use { data ->
+            data.writeInt(PRUNE_TABLE_MAGIC)
+            data.writeInt(PRUNE_TABLE_VERSION)
+
+            writeByteArray(data, phase1TwistFlipPruning)
+            writeByteArray(data, phase1SliceTwistPruning)
+            writeByteArray(data, phase2CornerEdgePruning)
+            writeByteArray(data, phase2CornerSlicePruning)
+            writeByteArray(data, phase2UDEdgeSlicePruning)
+        }
+    }
+
+    fun importBinary(input: InputStream, compressed: Boolean = true): Boolean {
+        return try {
+            val stream: InputStream = if (compressed) {
+                GZIPInputStream(BufferedInputStream(input))
+            } else {
+                BufferedInputStream(input)
+            }
+            DataInputStream(stream).use { data ->
+                if (data.readInt() != PRUNE_TABLE_MAGIC) return false
+                val version = data.readInt()
+                if (version != PRUNE_TABLE_VERSION) return false
+
+                if (!readByteArray(data, phase1TwistFlipPruning)) return false
+                if (!readByteArray(data, phase1SliceTwistPruning)) return false
+                if (!readByteArray(data, phase2CornerEdgePruning)) return false
+                if (!readByteArray(data, phase2CornerSlicePruning)) return false
+                if (!readByteArray(data, phase2UDEdgeSlicePruning)) return false
+            }
+            initialized = true
+            true
+        } catch (_: Exception) {
+            initialized = false
+            false
+        }
     }
 
     fun forceInitialize() {
@@ -52,7 +118,7 @@ object PruningTables {
             val (twist, flip) = queue1.removeFirst()
             val dist = getPhase1TwistFlipDistance(twist, flip)
 
-            if (dist >= 7) continue // Limit depth to keep initialization fast
+            if (dist >= PHASE1_TWIST_FLIP_LIMIT) continue // Limit depth to keep initialization fast
 
             for (move in CubeMove.values()) {
                 val state = CubeState.solved()
@@ -84,7 +150,7 @@ object PruningTables {
             // For mobile, we might want to keep it reasonable, e.g., 8-9
             // But for correctness, we need deeper tables.
             // Let's try 12 for now to avoid timeout during initialization
-            if (dist >= 12) continue
+            if (dist >= PHASE1_SLICE_TWIST_LIMIT) continue
 
             for (move in CubeMove.values()) {
                 val state = CubeState.solved()
@@ -107,31 +173,34 @@ object PruningTables {
         // Initialize all distances to -1
         phase2CornerEdgePruning.fill(-1)
         phase2CornerSlicePruning.fill(-1)
+        phase2UDEdgeSlicePruning.fill(-1)
 
-        // For Phase 2, we use simplified pruning tables
-        // A full implementation would require more sophisticated indexing
-
-        // BFS for corner-slice pruning
-        val queue = ArrayDeque<Pair<Int, Int>>()
-        queue.add(Pair(0, 0)) // solved state
+        // BFS on Phase 2 coordinates using move tables to stay in canonical coordinate space
+        val queue = ArrayDeque<CoordinateSystem.Phase2Coordinate>()
+        val start = CoordinateSystem.Phase2Coordinate(0, 0, 0)
+        queue.add(start)
         setPhase2CornerSliceDistance(0, 0, 0)
+        setPhase2UDEdgeSliceDistance(0, 0, 0)
 
         while (queue.isNotEmpty()) {
-            val (cornerPerm, sliceSorted) = queue.removeFirst()
-            val dist = getPhase2CornerSliceDistance(cornerPerm, sliceSorted)
-
-            if (dist >= 10) continue // Limit depth
+            val coord = queue.removeFirst()
+            val dist = getPhase2CornerSliceDistance(coord.cornerPerm, coord.sliceSorted)
+            if (dist >= PHASE2_LIMIT) continue // keep generation bounded for startup
 
             for (move in CubeMove.PHASE2_MOVES) {
-                val state = CubeState.solved()
-                CoordinateSystem.setCornerPermutationCoordinate(state, cornerPerm)
-                val newState = state.applyMove(move)
-                val newCornerPerm = CoordinateSystem.getCornerPermutationCoordinate(newState)
-                val newSliceSorted = CoordinateSystem.getSliceSortedCoordinate(newState)
+                val next = MoveTables.applyMovePhase2(coord, move)
 
-                if (getPhase2CornerSliceDistance(newCornerPerm, newSliceSorted) == -1) {
-                    setPhase2CornerSliceDistance(newCornerPerm, newSliceSorted, dist + 1)
-                    queue.add(Pair(newCornerPerm, newSliceSorted))
+                var enqueued = false
+                if (getPhase2CornerSliceDistance(next.cornerPerm, next.sliceSorted) == -1) {
+                    setPhase2CornerSliceDistance(next.cornerPerm, next.sliceSorted, dist + 1)
+                    enqueued = true
+                }
+                if (getPhase2UDEdgeSliceDistance(next.udEdgePerm, next.sliceSorted) == -1) {
+                    setPhase2UDEdgeSliceDistance(next.udEdgePerm, next.sliceSorted, dist + 1)
+                    enqueued = true
+                }
+                if (enqueued) {
+                    queue.add(next)
                 }
             }
         }
@@ -151,7 +220,8 @@ object PruningTables {
      */
     fun getPhase2Distance(coord: CoordinateSystem.Phase2Coordinate): Int {
         val dist1 = getPhase2CornerSliceDistance(coord.cornerPerm, coord.sliceSorted)
-        return maxOf(dist1, 0)
+        val dist2 = getPhase2UDEdgeSliceDistance(coord.udEdgePerm, coord.sliceSorted)
+        return maxOf(dist1, dist2, 0)
     }
 
     private fun getPhase1TwistFlipDistance(twist: Int, flip: Int): Int {
@@ -180,17 +250,41 @@ object PruningTables {
 
     private fun getPhase2CornerSliceDistance(cornerPerm: Int, sliceSorted: Int): Int {
         if (cornerPerm >= 40320 || sliceSorted >= 24) return 0
-        val idx = (cornerPerm % 5040) * 24 + sliceSorted // Use modulo to reduce table size
-        return if (idx < phase2CornerSlicePruning.size) phase2CornerSlicePruning[idx].toInt() else 0
+        val idx = cornerPerm * 24 + sliceSorted
+        return phase2CornerSlicePruning[idx].toInt()
     }
 
     private fun setPhase2CornerSliceDistance(cornerPerm: Int, sliceSorted: Int, dist: Int) {
         if (cornerPerm >= 40320 || sliceSorted >= 24) return
-        val idx = (cornerPerm % 5040) * 24 + sliceSorted
-        if (idx < phase2CornerSlicePruning.size) {
-            phase2CornerSlicePruning[idx] = dist.toByte()
-        }
+        val idx = cornerPerm * 24 + sliceSorted
+        phase2CornerSlicePruning[idx] = dist.toByte()
+    }
+
+    private fun getPhase2UDEdgeSliceDistance(udEdgePerm: Int, sliceSorted: Int): Int {
+        if (udEdgePerm >= 40320 || sliceSorted >= 24) return 0
+        val idx = udEdgePerm * 24 + sliceSorted
+        return phase2UDEdgeSlicePruning[idx].toInt()
+    }
+
+    private fun setPhase2UDEdgeSliceDistance(udEdgePerm: Int, sliceSorted: Int, dist: Int) {
+        if (udEdgePerm >= 40320 || sliceSorted >= 24) return
+        val idx = udEdgePerm * 24 + sliceSorted
+        phase2UDEdgeSlicePruning[idx] = dist.toByte()
     }
 
     fun isInitialized(): Boolean = initialized
+
+    private fun writeByteArray(data: DataOutputStream, arr: ByteArray) {
+        data.writeInt(arr.size)
+        data.write(arr)
+    }
+
+    private fun readByteArray(data: DataInputStream, target: ByteArray): Boolean {
+        val size = data.readInt()
+        if (size != target.size) return false
+        val bytes = data.readNBytes(size)
+        if (bytes.size != size) return false
+        System.arraycopy(bytes, 0, target, 0, size)
+        return true
+    }
 }

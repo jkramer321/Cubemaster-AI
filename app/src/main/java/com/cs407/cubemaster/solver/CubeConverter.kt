@@ -1,5 +1,6 @@
 package com.cs407.cubemaster.solver
 
+import android.util.Log
 import com.cs407.cubemaster.data.Cube
 
 /**
@@ -18,47 +19,51 @@ import com.cs407.cubemaster.data.Cube
  */
 object CubeConverter {
 
+    data class RecoveryResult(val cubeState: CubeState, val facelets: IntArray)
+
     /**
      * Convert from app's Cube to solver's CubeState
      */
     fun fromCube(cube: Cube): CubeState {
-        // Read all facelets
-        val facelets = IntArray(54)
+        val entryMsg = "CubeConverter.fromCube invoked"
+        try {
+            Log.w("CubeConverter", entryMsg) // higher priority to bypass debug filters
+        } catch (_: Exception) {
+            // ignore
+        }
+        println(entryMsg)
+        SolverLog.d("CubeConverter", entryMsg)
 
-        // Map faces: U(top), R(right), F(front), D(bottom), L(left), B(back)
-        // Order in our facelet array: U(0-8), R(9-17), F(18-26), D(27-35), L(36-44), B(45-53)
+        // Build facelets in requested Kociemba-friendly order:
+        // s1(front)=0-8, s2(top)=9-17, s3(bottom)=18-26,
+        // s4(left)=27-35, s5(right)=36-44, s6(back)=45-53
+        val kociFacelets = IntArray(54)
 
-        // s2 is top (U)
-        for (i in 0..8) {
-            facelets[i] = cube.getCell("s2", i / 3, i % 3)
+        fun copyFace(side: String, start: Int) {
+            for (i in 0..8) {
+                kociFacelets[start + i] = cube.getCell(side, i / 3, i % 3)
+            }
         }
 
-        // s5 is right (R)
-        for (i in 0..8) {
-            facelets[9 + i] = cube.getCell("s5", i / 3, i % 3)
-        }
+        copyFace("s1", 0)   // front
+        copyFace("s2", 9)   // top
+        copyFace("s3", 18)  // bottom
+        copyFace("s4", 27)  // left
+        copyFace("s5", 36)  // right
+        copyFace("s6", 45)  // back
 
-        // s1 is front (F)
-        for (i in 0..8) {
-            facelets[18 + i] = cube.getCell("s1", i / 3, i % 3)
-        }
+        logKociFacelets(kociFacelets)
 
-        // s3 is bottom (D)
-        for (i in 0..8) {
-            facelets[27 + i] = cube.getCell("s3", i / 3, i % 3)
-        }
+        // Reorder into solver facelet layout: U(0-8), R(9-17), F(18-26), D(27-35), L(36-44), B(45-53)
+        val solverFacelets = IntArray(54)
+        System.arraycopy(kociFacelets, 9, solverFacelets, 0, 9)   // U from top
+        System.arraycopy(kociFacelets, 36, solverFacelets, 9, 9)  // R from right
+        System.arraycopy(kociFacelets, 0, solverFacelets, 18, 9)  // F from front
+        System.arraycopy(kociFacelets, 18, solverFacelets, 27, 9) // D from bottom
+        System.arraycopy(kociFacelets, 27, solverFacelets, 36, 9) // L from left
+        System.arraycopy(kociFacelets, 45, solverFacelets, 45, 9) // B from back
 
-        // s4 is left (L)
-        for (i in 0..8) {
-            facelets[36 + i] = cube.getCell("s4", i / 3, i % 3)
-        }
-
-        // s6 is back (B)
-        for (i in 0..8) {
-            facelets[45 + i] = cube.getCell("s6", i / 3, i % 3)
-        }
-
-        val state = fromFacelets(facelets)
+        val state = fromFacelets(solverFacelets)
         if (!state.isValid()) {
             val errorMsg = "Invalid cube state: " +
                     "CO sum=${state.cornerOrientation.sum()}, " +
@@ -71,11 +76,31 @@ object CubeConverter {
         return state
     }
 
+    private fun logKociFacelets(facelets: IntArray) {
+        if (facelets.size != 54) return
+        fun slice(start: Int) = facelets.slice(start until start + 9).joinToString(",")
+        val msg =
+            "Koci facelets -> s1(front 0-8): [${slice(0)}]; " +
+                    "s2(top 9-17): [${slice(9)}]; " +
+                    "s3(bottom 18-26): [${slice(18)}]; " +
+                    "s4(left 27-35): [${slice(27)}]; " +
+                    "s5(right 36-44): [${slice(36)}]; " +
+                    "s6(back 45-53): [${slice(45)}]"
+        SolverLog.d("CubeConverter", msg)
+        // Direct log to Logcat for easier filtering
+        try {
+            Log.d("CubeConverter", msg)
+        } catch (_: Exception) {
+            // no-op fallback
+        }
+    }
+
     /**
      * Convert from facelet representation to CubeState
      * Facelet array format: U(0-8), R(9-17), F(18-26), D(27-35), L(36-44), B(45-53)
      */
-    private fun fromFacelets(facelets: IntArray): CubeState {
+    @JvmStatic
+    fun fromFacelets(facelets: IntArray): CubeState {
         // Identify center colors
         val uColor = facelets[4]   // U center
         val rColor = facelets[13]  // R center
@@ -234,6 +259,53 @@ object CubeConverter {
             edgePermutation,
             edgeOrientation
         )
+    }
+
+    /**
+     * Attempt to recover a CubeState from scanned faces where side labels may be permuted.
+     * Assumes colors 0-5 correspond to U,R,F,D,L,B respectively (center colors).
+     * Returns null if any face is missing.
+     */
+    fun recoverMappingFromScannedFaces(scanned: Map<String, Array<Array<Int>>>): RecoveryResult? {
+        // Require all six faces
+        if (scanned.size < 6) return null
+
+        // Helper to find the face whose center matches a given color
+        fun findFaceByCenter(color: Int): Array<Array<Int>>? {
+            return scanned.values.firstOrNull { face ->
+                face[1][1] == color
+            }
+        }
+
+        val uFace = findFaceByCenter(0) ?: return null
+        val rFace = findFaceByCenter(1) ?: return null
+        val fFace = findFaceByCenter(2) ?: return null
+        val dFace = findFaceByCenter(3) ?: return null
+        val lFace = findFaceByCenter(4) ?: return null
+        val bFace = findFaceByCenter(5) ?: return null
+
+        val facelets = IntArray(54)
+
+        fun copy(face: Array<Array<Int>>, destStart: Int) {
+            var idx = 0
+            for (r in 0..2) {
+                for (c in 0..2) {
+                    facelets[destStart + idx] = face[r][c]
+                    idx++
+                }
+            }
+        }
+
+        // Solver order: U(0-8), R(9-17), F(18-26), D(27-35), L(36-44), B(45-53)
+        copy(uFace, 0)
+        copy(rFace, 9)
+        copy(fFace, 18)
+        copy(dFace, 27)
+        copy(lFace, 36)
+        copy(bFace, 45)
+
+        val state = fromFacelets(facelets)
+        return RecoveryResult(state, facelets)
     }
 
     /**

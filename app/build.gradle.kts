@@ -40,6 +40,9 @@ android {
     buildFeatures {
         compose = true
     }
+    androidResources {
+        noCompress += listOf("bin", "gz")
+    }
 }
 
 dependencies {

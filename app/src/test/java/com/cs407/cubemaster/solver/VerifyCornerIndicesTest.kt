@@ -11,14 +11,14 @@ class VerifyCornerIndicesTest {
     private fun createSolvedCube(): Cube {
         return Cube(
             s1 = mutableListOf(
-                mutableListOf(1, 1, 1),
-                mutableListOf(1, 1, 1),
-                mutableListOf(1, 1, 1)
-            ),
-            s2 = mutableListOf(
                 mutableListOf(2, 2, 2),
                 mutableListOf(2, 2, 2),
                 mutableListOf(2, 2, 2)
+            ),
+            s2 = mutableListOf(
+                mutableListOf(0, 0, 0),
+                mutableListOf(0, 0, 0),
+                mutableListOf(0, 0, 0)
             ),
             s3 = mutableListOf(
                 mutableListOf(3, 3, 3),
@@ -31,14 +31,14 @@ class VerifyCornerIndicesTest {
                 mutableListOf(4, 4, 4)
             ),
             s5 = mutableListOf(
+                mutableListOf(1, 1, 1),
+                mutableListOf(1, 1, 1),
+                mutableListOf(1, 1, 1)
+            ),
+            s6 = mutableListOf(
                 mutableListOf(5, 5, 5),
                 mutableListOf(5, 5, 5),
                 mutableListOf(5, 5, 5)
-            ),
-            s6 = mutableListOf(
-                mutableListOf(6, 6, 6),
-                mutableListOf(6, 6, 6),
-                mutableListOf(6, 6, 6)
             )
         )
     }
@@ -47,18 +47,18 @@ class VerifyCornerIndicesTest {
     fun verifyAllCornerIndices() {
         val cube = createSolvedCube()
         
-        // Color mapping: U=2, R=5, F=1, D=3, L=4, B=6
+        // Color mapping (URFDLB): U=0, R=1, F=2, D=3, L=4, B=5
         
         // Expected corner colors in solved state
         val expectedCorners = mapOf(
-            "URF" to listOf(2, 5, 1),  // U, R, F
-            "UFL" to listOf(2, 1, 4),  // U, F, L
-            "ULB" to listOf(2, 4, 6),  // U, L, B
-            "UBR" to listOf(2, 6, 5),  // U, B, R
-            "DFR" to listOf(3, 1, 5),  // D, F, R
-            "DLF" to listOf(3, 4, 1),  // D, L, F
-            "DBL" to listOf(3, 6, 4),  // D, B, L
-            "DRB" to listOf(3, 5, 6)   // D, R, B
+            "URF" to listOf(0, 1, 2),  // U, R, F
+            "UFL" to listOf(0, 2, 4),  // U, F, L
+            "ULB" to listOf(0, 4, 5),  // U, L, B
+            "UBR" to listOf(0, 5, 1),  // U, B, R
+            "DFR" to listOf(3, 2, 1),  // D, F, R
+            "DLF" to listOf(3, 4, 2),  // D, L, F
+            "DBL" to listOf(3, 5, 4),  // D, B, L
+            "DRB" to listOf(3, 1, 5)   // D, R, B
         )
         
         // Current indices from CubeConverter

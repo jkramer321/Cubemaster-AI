@@ -7,12 +7,12 @@ class VerifyEdgeIndicesTest {
     
     private fun createSolvedCube(): Cube {
         return Cube(
-            s1 = mutableListOf(mutableListOf(1, 1, 1), mutableListOf(1, 1, 1), mutableListOf(1, 1, 1)),
-            s2 = mutableListOf(mutableListOf(2, 2, 2), mutableListOf(2, 2, 2), mutableListOf(2, 2, 2)),
-            s3 = mutableListOf(mutableListOf(3, 3, 3), mutableListOf(3, 3, 3), mutableListOf(3, 3, 3)),
-            s4 = mutableListOf(mutableListOf(4, 4, 4), mutableListOf(4, 4, 4), mutableListOf(4, 4, 4)),
-            s5 = mutableListOf(mutableListOf(5, 5, 5), mutableListOf(5, 5, 5), mutableListOf(5, 5, 5)),
-            s6 = mutableListOf(mutableListOf(6, 6, 6), mutableListOf(6, 6, 6), mutableListOf(6, 6, 6))
+            s1 = mutableListOf(mutableListOf(2, 2, 2), mutableListOf(2, 2, 2), mutableListOf(2, 2, 2)), // Front
+            s2 = mutableListOf(mutableListOf(0, 0, 0), mutableListOf(0, 0, 0), mutableListOf(0, 0, 0)), // Up
+            s3 = mutableListOf(mutableListOf(3, 3, 3), mutableListOf(3, 3, 3), mutableListOf(3, 3, 3)), // Down
+            s4 = mutableListOf(mutableListOf(4, 4, 4), mutableListOf(4, 4, 4), mutableListOf(4, 4, 4)), // Left
+            s5 = mutableListOf(mutableListOf(1, 1, 1), mutableListOf(1, 1, 1), mutableListOf(1, 1, 1)), // Right
+            s6 = mutableListOf(mutableListOf(5, 5, 5), mutableListOf(5, 5, 5), mutableListOf(5, 5, 5))  // Back
         )
     }
     
@@ -20,22 +20,22 @@ class VerifyEdgeIndicesTest {
     fun verifyAllEdgeIndices() {
         val cube = createSolvedCube()
         
-        // Color mapping: U=2, R=5, F=1, D=3, L=4, B=6
+        // Color mapping (URFDLB): U=0, R=1, F=2, D=3, L=4, B=5
         
         // Expected edge colors in solved state
         val expectedEdges = mapOf(
-            "UR" to listOf(2, 5),  // U, R
-            "UF" to listOf(2, 1),  // U, F
-            "UL" to listOf(2, 4),  // U, L
-            "UB" to listOf(2, 6),  // U, B
-            "DR" to listOf(3, 5),  // D, R
-            "DF" to listOf(3, 1),  // D, F
+            "UR" to listOf(0, 1),  // U, R
+            "UF" to listOf(0, 2),  // U, F
+            "UL" to listOf(0, 4),  // U, L
+            "UB" to listOf(0, 5),  // U, B
+            "DR" to listOf(3, 1),  // D, R
+            "DF" to listOf(3, 2),  // D, F
             "DL" to listOf(3, 4),  // D, L
-            "DB" to listOf(3, 6),  // D, B
-            "FR" to listOf(1, 5),  // F, R
-            "FL" to listOf(1, 4),  // F, L
-            "BL" to listOf(6, 4),  // B, L
-            "BR" to listOf(6, 5)   // B, R
+            "DB" to listOf(3, 5),  // D, B
+            "FR" to listOf(2, 1),  // F, R
+            "FL" to listOf(2, 4),  // F, L
+            "BL" to listOf(5, 4),  // B, L
+            "BR" to listOf(5, 1)   // B, R
         )
         
         // Current indices from CubeConverter

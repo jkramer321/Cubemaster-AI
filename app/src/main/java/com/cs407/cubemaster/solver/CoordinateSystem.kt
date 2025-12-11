@@ -15,6 +15,13 @@ package com.cs407.cubemaster.solver
  */
 object CoordinateSystem {
 
+    /**
+     * Enable to emit detailed coordinate logs to help verify mappings.
+     * Can be flipped at runtime if needed.
+     */
+    @Volatile
+    var debugLoggingEnabled: Boolean = false
+
     const val SOLVED_SLICE_COORDINATE = 494
 
     // Phase 1: Corner twist coordinate (0..2186)
@@ -227,5 +234,21 @@ object CoordinateSystem {
                 )
             }
         }
+    }
+
+    /**
+     * Emit the current coordinates for diagnostics.
+     * Useful to confirm coordinate system alignment after conversion.
+     */
+    fun logCoordinates(state: CubeState, label: String = "state", force: Boolean = false) {
+        if (!debugLoggingEnabled && !force) return
+
+        val p1 = Phase1Coordinate.from(state)
+        val p2 = Phase2Coordinate.from(state)
+        SolverLog.d(
+            "CoordinateSystem",
+            "[$label] p1(twist=${p1.twist}, flip=${p1.flip}, slice=${p1.slice}) " +
+                    "p2(cp=${p2.cornerPerm}, ud=${p2.udEdgePerm}, slice=${p2.sliceSorted})"
+        )
     }
 }

@@ -1,29 +1,29 @@
 # Quick Reference: Cube Structure
 
-## Color Codes
+## Color Codes (canonical)
 ```
-0 = White   (Front - s1)
-1 = Red     (Bottom - s3)
-2 = Blue    (Right - s5)
-3 = Orange  (Left - s4)
-4 = Green   (Back - s6)
-5 = Yellow  (Top - s2)
+0 = Up    (s2 - Top)    → White
+1 = Right (s5 - Right)  → Red
+2 = Front (s1 - Front)  → Green
+3 = Down  (s3 - Bottom) → Yellow
+4 = Left  (s4 - Left)   → Orange
+5 = Back  (s6 - Back)   → Blue
 ```
 
 ## Standard Rubik's Cube Orientation
 ```
          +-------+
-         | YELLOW|  (s2 - Top)
-         |   5   |
+         | WHITE |  (s2 - Top, color 0 / Up)
+         |   0   |
          +-------+
 +-------++-------++-------++-------+
-|ORANGE ||WHITE ||BLUE   ||GREEN  |
-|   3   ||   0  ||   2   ||   4   |
+|ORANGE ||GREEN ||RED    ||BLUE   |
+|   4   ||   2  ||   1   ||   5   |
 | (s4)  || (s1) || (s5)  || (s6)  |
 +-------++-------++-------++-------+
          +-------+
-         |  RED  |  (s3 - Bottom)
-         |   1   |
+         | YELLOW|  (s3 - Bottom, color 3 / Down)
+         |   3   |
          +-------+
 ```
 

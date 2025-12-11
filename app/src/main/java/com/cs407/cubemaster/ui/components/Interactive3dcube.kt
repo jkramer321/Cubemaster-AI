@@ -243,13 +243,13 @@ fun getMoveAnimation(move: String): MoveAnimation {
         "R" -> MoveAnimation(RotationAxis.Z, 2, -1)      // Right column up, animate DOWN (reversed for visual match)
         "R'" -> MoveAnimation(RotationAxis.Z, 2, 1)      // Right column down, animate UP (reversed for visual match)
 
-        // F/F' - Front face (middle column as placeholder)
-        "F" -> MoveAnimation(RotationAxis.Z, 1, -1)      // Middle column up, animate DOWN (reversed for visual match)
-        "F'" -> MoveAnimation(RotationAxis.Z, 1, 1)      // Middle column down, animate UP (reversed for visual match)
+        // F/F' - Front face (depth layer front) - swapped to match solver
+        "F" -> MoveAnimation(RotationAxis.Y, 0, -1)      // Front face clockwise (solver)
+        "F'" -> MoveAnimation(RotationAxis.Y, 0, 1)      // Front face counter-clockwise (solver)
 
-        // B/B' - Back face (middle row as placeholder)
-        "B" -> MoveAnimation(RotationAxis.X, 1, 1)       // Middle row right
-        "B'" -> MoveAnimation(RotationAxis.X, 1, -1)     // Middle row left
+        // B/B' - Back face (depth layer back)
+        "B" -> MoveAnimation(RotationAxis.Y, 2, 1)       // Back face clockwise (viewed from back)
+        "B'" -> MoveAnimation(RotationAxis.Y, 2, -1)     // Back face counter-clockwise
 
         else -> MoveAnimation(RotationAxis.X, 0, 1)
     }
@@ -376,36 +376,53 @@ fun MoveButton(
 internal fun performMove(cube: Cube, move: String): Cube {
     val newCube = cube.freeze()
 
-    when (move) {
-        // U/U' - Top face (Yellow) - Works correctly ✓
-        "U" -> newCube.rotateRow(0, rotateRight = true)   // Top row rotates right
-        "U'" -> newCube.rotateRow(0, rotateRight = false) // Top row rotates left
-
-        // D/D' - Bottom face (Red) - SWAPPED to match horizontal consistency
-        "D" -> newCube.rotateRow(2, rotateRight = true)   // Bottom row rotates right (was false)
-        "D'" -> newCube.rotateRow(2, rotateRight = false) // Bottom row rotates left (was true)
-
-        // L/L' - Left face (Orange) - SWAPPED for consistency with vertical commands
-        "L" -> newCube.rotateCol(0, rotateUp = true)      // Left column rotates up (was false)
-        "L'" -> newCube.rotateCol(0, rotateUp = false)    // Left column rotates down (was true)
-
-        // R/R' - Right face (Blue) - FIXED! Was incorrectly using rotateRow
-        "R" -> newCube.rotateCol(2, rotateUp = true)      // Right column rotates up (CW from right)
-        "R'" -> newCube.rotateCol(2, rotateUp = false)    // Right column rotates down (CCW from right)
-
-        // F/F' - Front face (White) - CANNOT BE IMPLEMENTED with current API
-        // The API only supports column/row slices, not arbitrary face rotations
-        // For now, map to middle column rotation as placeholder
-        "F" -> newCube.rotateCol(1, rotateUp = true)      // Middle column (not true front face)
-        "F'" -> newCube.rotateCol(1, rotateUp = false)    // Middle column
-
-        // B/B' - Back face (Green) - CANNOT BE IMPLEMENTED with current API
-        // Map to middle row rotation as placeholder
-        "B" -> newCube.rotateRow(1, rotateRight = true)   // Middle row (not true back face)
-        "B'" -> newCube.rotateRow(1, rotateRight = false) // Middle row
+    fun repeatTwice(action: () -> Unit) {
+        action(); action()
     }
 
+    when (move) {
+        // U face (standard: clockwise when looking at U)
+        "U"  -> newCube.rotateRow(0, rotateRight = true)
+        "U'" -> newCube.rotateRow(0, rotateRight = false)
+        "U2" -> repeatTwice { newCube.rotateRow(0, rotateRight = true) }
+
+        // D face (clockwise when looking at D)
+        "D"  -> newCube.rotateRow(2, rotateRight = true)
+        "D'" -> newCube.rotateRow(2, rotateRight = false)
+        "D2" -> repeatTwice { newCube.rotateRow(2, rotateRight = true) }
+
+        // L face (clockwise when looking at L)
+        "L"  -> newCube.rotateCol(0, rotateUp = true)
+        "L'" -> newCube.rotateCol(0, rotateUp = false)
+        "L2" -> repeatTwice { newCube.rotateCol(0, rotateUp = true) }
+
+        // R face (clockwise when looking at R)
+        "R"  -> newCube.rotateCol(2, rotateUp = true)
+        "R'" -> newCube.rotateCol(2, rotateUp = false)
+        "R2" -> repeatTwice { newCube.rotateCol(2, rotateUp = true) }
+
+        // F face (clockwise when looking at F) - swapped to match solver
+        "F"  -> newCube.rotateDepth(0, rotateClockwise = false)
+        "F'" -> newCube.rotateDepth(0, rotateClockwise = true)
+        "F2" -> repeatTwice { newCube.rotateDepth(0, rotateClockwise = false) }
+
+        // B face (clockwise when looking at B)
+        "B"  -> newCube.rotateDepth(2, rotateClockwise = true)
+        "B'" -> newCube.rotateDepth(2, rotateClockwise = false)
+        "B2" -> repeatTwice { newCube.rotateDepth(2, rotateClockwise = true) }
+    }
+
+    logFaces("CubeDebug", newCube)
     return newCube
+}
+
+// Debug helper: dump all faces in URFDLB order
+private fun logFaces(tag: String, cube: Cube) {
+    fun side(name: String) = List(3) { r -> List(3) { c -> cube.getCell(name, r, c) } }
+    Log.d(
+        tag,
+        "U=${side("s2")} R=${side("s5")} F=${side("s1")} D=${side("s3")} L=${side("s4")} B=${side("s6")}"
+    )
 }
 
 private fun DrawScope.draw3DRubiksCube(
@@ -446,7 +463,16 @@ private fun DrawScope.draw3DRubiksCube(
                             else -> false
                         }
                     }
-                    RotationAxis.Y -> false // Not used in current implementation
+                    RotationAxis.Y -> {
+                        // For depth rotations: check z coordinate
+                        // Front layer z = +1, Back layer z = -1
+                        when (animation.layer) {
+                            0 -> z == 1   // Front face
+                            1 -> z == 0   // Middle slice
+                            2 -> z == -1  // Back face
+                            else -> false
+                        }
+                    }
                     RotationAxis.Z -> {
                         // For column rotations: check x coordinate
                         // Col 0 (left) = x = -1, Col 2 (right) = x = +1
@@ -462,7 +488,7 @@ private fun DrawScope.draw3DRubiksCube(
                 val extraRotation = if (shouldAnimate && animation != null) {
                     when (animation.axis) {
                         RotationAxis.X -> Triple(0f, animationProgress, 0f)  // Row rotations = Y-axis rotation (horizontal)
-                        RotationAxis.Y -> Triple(0f, 0f, 0f)                 // Not used
+                        RotationAxis.Y -> Triple(0f, 0f, animationProgress)  // Depth rotations = Z-axis rotation
                         RotationAxis.Z -> Triple(animationProgress, 0f, 0f)  // Column rotations = X-axis rotation (vertical)
                     }
                 } else {
